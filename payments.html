@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Artist Withdrawal — D&B Minstrel</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  body {
+    background:#10162E;
+    color:#fff;
+    font-family:"Poppins",sans-serif;
+    margin:0;
+    padding:0;
+  }
+
+  .dashboard-wrapper { 
+    display:flex; 
+    flex-direction:column; 
+    min-height:100vh; 
+    background:#0A0F1E; 
+    color:#fff; 
+  }
+
+  .dashboard-content { 
+    display:flex; 
+    flex:1; 
+    overflow:hidden; 
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width:250px; 
+    background:#10162E; 
+    padding:30px 20px; 
+    display:flex; 
+    flex-direction:column; 
+    gap:20px; 
+    height:100%; 
+    overflow-y:auto; 
+    position:sticky; 
+    top:0;
+  }
+  .sidebar h2 { color:#A6C8FF; margin-bottom:20px; text-align:center; }
+  .sidebar a { 
+    display:flex; 
+    align-items:center; 
+    gap:15px; 
+    padding:10px 15px; 
+    color:#fff; 
+    border-radius:10px; 
+    transition:0.3s; 
+    white-space: nowrap; 
+  }
+  .sidebar a:hover { background:whitesmoke; }
+
+  /* Main area */
+  .main-area {
+    flex:1;
+    padding:40px;
+    overflow-y:auto;
+  }
+
+  h1{
+    font-size:2rem;
+    margin-bottom:10px;
+    color:#2D6DAB;
+  }
+
+  .summary-box{
+    background:#2D6DAB;
+    padding:20px;
+    border-radius:15px;
+    margin-bottom:25px;
+    border:1px solid #333;
+  }
+
+  .summary-box h2{
+    margin-top:0;
+    color:#A6C8FF;
+  }
+
+  .summary-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:20px;
+  }
+
+  .summary-item{
+    background:#10162E;
+    padding:18px;
+    border-radius:12px;
+    text-align:center;
+  }
+
+  .summary-item h3{
+    margin:0 0 5px 0;
+    color:#A6C8FF;
+    font-size:1.1rem;
+  }
+
+  .withdraw-form{
+    background:#2D6DAB;
+    padding:25px;
+    border-radius:15px;
+    border:1px solid #333;
+  }
+
+  .withdraw-form h2{
+    margin-top:0;
+    color:#A6C8FF;
+  }
+
+  label{
+    display:block;
+    margin-bottom:5px;
+    font-weight:500;
+  }
+
+  input, select{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    margin-bottom:20px;
+    background:#10162E;
+    color:#fff;
+  }
+
+  .btn{
+    width:100%;
+    padding:14px;
+    border:none;
+    background:#A6C8FF;
+    color:whitesmoke;
+    font-weight:600;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:1rem;
+    margin-top:10px;
+  }
+
+  .btn:disabled{
+    background:#888;
+    cursor:not-allowed;
+  }
+
+  /* Footer */
+  footer { 
+    text-align:center; 
+    padding:20px 5%; 
+    background:#10162E; 
+    color:#fff; 
+    border-top:1px solid #4092D0; 
+    flex-shrink:0; 
+  }
+
+  /* Responsive */
+  @media(max-width:900px){ 
+    .dashboard-content { flex-direction: column; } 
+    .sidebar { width:100%; height:auto; flex-direction:row; overflow-x:auto; padding:15px; } 
+    .sidebar a { white-space: nowrap; } 
+    .main-area { padding:20px; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="dashboard-wrapper">
+
+  <div class="dashboard-content">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-logo" style="text-align:center; margin-bottom:15px;">
+        <img src="logo.jpeg" alt="D&B Minstrel Logo" style="width:80px; height:80px; border-radius:50%; border:2px solid #A6C8FF;">
+      </div>
+      <h2>D&B Minstrel</h2>
+      <a href="artist_dashboard.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="artist_dashboard.html" id="sidebarUploadBtn"><i class="fa-solid fa-upload"></i> Upload Track</a>
+      <a href="releases.html"><i class="fa-solid fa-music"></i> My Songs</a>
+      <a href="analytics.html"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+      <a href="activity.html"><i class="fa-solid fa-book"></i> Activity</a>
+      <a href="payments.html"><i class="fa-solid fa-wallet"></i> Payments</a>
+      <a href="settings.html"><i class="fa-solid fa-user-cog"></i> Settings</a>
+      <a href="support.html"><i class="fa-solid fa-circle-question"></i> Support</a>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-area">
+
+      <h1>Earnings</h1>
+
+      <!-- Earnings Summary -->
+      <div class="summary-box">
+        <h2>Your Earnings Summary</h2>
+
+        <div class="summary-grid">
+          <div class="summary-item">
+            <h3>Wallet Balance</h3>
+            <p id="walletBal">$0.00</p>
+          </div>
+
+          <div class="summary-item">
+            <h3>Total Earnings</h3>
+            <p id="totalEarn">$0.00</p>
+          </div>
+
+          <div class="summary-item">
+            <h3>Spotify</h3>
+            <p id="spotifyEarn">$0.00</p>
+          </div>
+
+          <div class="summary-item">
+            <h3>Apple Music</h3>
+            <p id="appleEarn">$0.00</p>
+          </div>
+
+          <div class="summary-item">
+            <h3>TikTok</h3>
+            <p id="tiktokEarn">$0.00</p>
+          </div>
+
+          <div class="summary-item">
+            <h3>YouTube</h3>
+            <p id="youtubeEarn">$0.00</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Withdrawal Form -->
+      <div class="withdraw-form">
+        <h2>Withdrawal Request</h2>
+
+        <label>Artist Name</label>
+        <input type="text" id="artistName" readonly>
+
+        <label>Email</label>
+        <input type="text" id="artistEmail" readonly>
+
+        <label>Withdrawal Method</label>
+        <select id="withdrawMethod">
+          <option value="">Select Method</option>
+          <option value="MTN Mobile Money">MTN Mobile Money</option>
+          <option value="Airtel Money">Airtel Money</option>
+          <option value="Visa / MasterCard">Visa / MasterCard</option>
+          <option value="Bank Account">Bank Account</option>
+        </select>
+
+        <label>Amount</label>
+        <input type="number" id="withdrawAmount" min="1">
+
+        <label>Account / Phone Number</label>
+        <input type="text" id="withdrawAccount">
+
+        <button class="btn" id="submitWithdraw" disabled>Submit Withdrawal</button>
+      </div>
+
+    </div> <!-- END MAIN -->
+
+  </div> <!-- END DASHBOARD CONTENT -->
+
+  <footer>© 2025 D&B Minstrel | All rights reserved</footer>
+
+</div>
+
+<script>
+  function loadWithdrawalPage() {
+    const wallet = JSON.parse(localStorage.getItem("artistWallet")) || {};
+    const profile = JSON.parse(localStorage.getItem("artistProfile")) || {};
+
+    document.getElementById("walletBal").innerText = `$${(wallet.balance || 0).toFixed(2)}`;
+    document.getElementById("totalEarn").innerText = `$${(wallet.totalEarnings || 0).toFixed(2)}`;
+    document.getElementById("spotifyEarn").innerText = `$${(wallet.spotify || 0).toFixed(2)}`;
+    document.getElementById("appleEarn").innerText = `$${(wallet.apple || 0).toFixed(2)}`;
+    document.getElementById("tiktokEarn").innerText = `$${(wallet.tiktok || 0).toFixed(2)}`;
+    document.getElementById("youtubeEarn").innerText = `$${(wallet.youtube || 0).toFixed(2)}`;
+
+    document.getElementById("artistName").value = profile.name || "";
+    document.getElementById("artistEmail").value = profile.email || "";
+  }
+
+  loadWithdrawalPage();
+
+  const submitBtn = document.getElementById("submitWithdraw");
+  const inputs = ["withdrawMethod", "withdrawAmount", "withdrawAccount"];
+
+  inputs.forEach(id => {
+    document.getElementById(id).addEventListener("input", checkForm);
+  });
+
+  function checkForm() {
+    const method = document.getElementById("withdrawMethod").value;
+    const amount = document.getElementById("withdrawAmount").value;
+    const account = document.getElementById("withdrawAccount").value;
+
+    submitBtn.disabled = !(method && amount && account && amount > 0);
+  }
+
+  submitBtn.addEventListener("click", () => {
+    const withdrawal = {
+      date: new Date().toLocaleString(),
+      method: document.getElementById("withdrawMethod").value,
+      amount: parseFloat(document.getElementById("withdrawAmount").value),
+      account: document.getElementById("withdrawAccount").value,
+      status: "Pending"
+    };
+
+    let list = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
+    list.unshift(withdrawal);
+    localStorage.setItem("withdrawRequests", JSON.stringify(list));
+
+    alert("Withdrawal request submitted successfully!");
+    window.location.href = "dashboard.html";
+  });
+</script>
+
+</body>
+</html>

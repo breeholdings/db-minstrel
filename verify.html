@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Verify Email</title>
+  <style>
+    body {
+      background:#0A0F1E; color:#fff; font-family:'Montserrat', sans-serif;
+      display:flex; justify-content:center; align-items:center; height:100vh;
+    }
+    .verify-box {
+      background:#10162E; padding:30px; width:350px; border-radius:15px;
+      text-align:center; box-shadow:0 0 20px rgba(0,0,0,0.4);
+    }
+    input {
+      width:100%; padding:12px; margin-top:10px; border:none;
+      border-radius:10px; background:#0A0F1E; color:white;
+    }
+    button {
+      width:100%; padding:12px; margin-top:15px; border:none;
+      background:#2D6DAB; color:white; border-radius:10px; cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="verify-box">
+  <h2>Email Verification</h2>
+  <p>Enter the verification code sent to your email.</p>
+
+  <input type="text" id="verifyCode" placeholder="6-digit code">
+
+  <button onclick="verifyCode()">Verify</button>
+</div>
+
+<script>
+function verifyCode() {
+    const userInput = document.getElementById("verifyCode").value;
+    const signup = JSON.parse(localStorage.getItem("pendingSignup"));
+
+    if(!signup){
+        alert("No signup found!");
+        return;
+    }
+
+    if(userInput == signup.code) {
+        // Save final user account
+        localStorage.setItem("userAccount", JSON.stringify(signup));
+
+        // Remove temp signup store
+        localStorage.removeItem("pendingSignup");
+
+        // Redirect to dashboard
+        window.location.href = "artist_dashboard.html";
+    } else {
+        alert("Incorrect code, try again.");
+    }
+}
+</script>
+
+</body>
+</html>

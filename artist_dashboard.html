@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&B Minstrel — Artist Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+* { box-sizing: border-box; margin:0; padding:0; font-family:'Montserrat',sans-serif; }
+html, body { height:100%; margin:0; }
+.dashboard-wrapper { display:flex; flex-direction:column; min-height:100vh; background:#0A0F1E; color:#fff; }
+.dashboard-content { display:flex; flex:1; overflow:hidden; }
+
+/* Sidebar */
+.sidebar {
+  width:250px; background:#10162E; padding:30px 20px; display:flex; flex-direction:column; gap:20px; height:100%; overflow-y:auto; position:sticky; top:0;
+}
+.sidebar h2 { color:#A6C8FF; margin-bottom:20px; text-align:center; }
+.sidebar a { display:flex; align-items:center; gap:15px; padding:10px 15px; color:#fff; border-radius:10px; transition:0.3s; white-space: nowrap; }
+.sidebar a:hover { background:#2D6DAB; }
+
+/* Main */
+.main { flex:1; padding:30px 40px; display:flex; flex-direction:column; overflow-y:auto; }
+
+/* Header */
+.main-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; }
+.main-header h1 { font-size:2rem; color:#A6C8FF; }
+.main-header button { padding:8px 18px; border:none; border-radius:25px; background:#2D6DAB; color:#fff; font-weight:600; cursor:pointer; transition:0.3s; }
+.main-header button:hover { background:#4092D0; }
+
+/* Stats cards */
+.stats { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:40px; }
+.stat-card { background:#10162E; flex:1; min-width:150px; padding:20px; border-radius:15px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.3);}
+.stat-card h3 { font-size:1.8rem; color:#A6C8FF; margin-bottom:5px; }
+.stat-card p { color:#ccc; font-size:0.9rem; }
+
+/* Recent Releases */
+.releases { margin-bottom:40px; }
+.releases h2 { font-size:1.8rem; color:#A6C8FF; margin-bottom:20px; }
+.release-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; }
+.release-card { background:#10162E; border-radius:15px; padding:15px; text-align:center; transition:0.3s; box-shadow:0 4px 15px rgba(0,0,0,0.3); }
+.release-card:hover { transform:translateY(-5px); box-shadow:0 8px 25px rgba(0,0,0,0.5); }
+.release-card img { width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:10px; }
+.release-card h3 { color:#fff; margin-bottom:5px; }
+.release-card p { color:#ccc; font-size:0.9rem; margin-bottom:10px; }
+.release-card .stream-links a { display:inline-block; margin:5px; padding:6px 12px; background:#2D6DAB; border-radius:20px; font-size:0.85rem; font-weight:600; transition:0.3s; }
+.release-card .stream-links a:hover { background:#4092D0; }
+
+/* Upload button */
+.upload-btn { padding:10px 20px; border:none; border-radius:30px; background:#2D6DAB; color:#fff; font-weight:600; cursor:pointer; transition:0.3s; margin-bottom:20px; align-self:flex-start; }
+.upload-btn:hover { background:#4092D0; }
+
+/* Upload modal */
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.75); justify-content:center; align-items:center; z-index:10000; overflow-y: auto; padding: 20px; }
+.modal-content { background:#10162E; padding:30px; border-radius:15px; width:90%; max-width:600px; color:#fff; position:relative; max-height: 90vh; overflow-y: auto; }
+.modal-content h2 { margin-bottom:20px; color:#A6C8FF; }
+.modal-content label { display:block; margin:10px 0 5px; }
+.modal-content input, .modal-content textarea, .modal-content select { width:100%; padding:10px; border-radius:10px; border:none; margin-bottom:15px; background:#0A0F1E; color:#fff; }
+.modal-content button { padding:10px 20px; border:none; border-radius:25px; background:#2D6DAB; color:#fff; font-weight:600; cursor:pointer; transition:0.3s; }
+.modal-content button:hover { background:#4092D0; }
+.close-modal { position:absolute; top:15px; right:20px; font-size:1.5rem; cursor:pointer; color:#fff; }
+
+/* Activity feed */
+.activity { margin-bottom:40px; }
+.activity h2 { font-size:1.8rem; color:#A6C8FF; margin-bottom:15px; }
+.activity ul { list-style:none; }
+.activity li { background:#10162E; padding:15px; border-radius:10px; margin-bottom:10px; box-shadow:0 3px 10px rgba(0,0,0,0.3);}
+.activity li span { color:#A6C8FF; font-weight:600; }
+
+/* Payments */
+.payments { margin-bottom:40px; }
+.payments h2 { font-size:1.8rem; color:#A6C8FF; margin-bottom:15px; }
+.payments table { width:100%; border-collapse:collapse; }
+.payments th, .payments td { padding:12px; text-align:left; border-bottom:1px solid #2D6DAB; }
+.payments th { color:#A6C8FF; }
+.payments td { color:#ccc; }
+
+/* Footer */
+footer { text-align:center; padding:20px 5%; background:#10162E; color:#fff; border-top:1px solid #4092D0; flex-shrink:0; }
+
+/* Responsive */
+@media(max-width:900px){ .dashboard-content { flex-direction: column; } .sidebar { width:100%; height:auto; flex-direction:row; overflow-x:auto; padding:15px; } .sidebar a { white-space: nowrap; } .main { padding:20px; } .stats { flex-direction:column; }}
+
+/* Mini stats on track cards */
+.release-card .track-stats {
+  display: flex;
+  justify-content: space-around;
+  background:#0A0F1E;
+  border-radius:10px;
+  padding:8px 0;
+  margin-bottom:10px;
+  font-size:0.85rem;
+  color:#ccc;
+}
+
+.release-card .track-stats div {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.release-card .track-stats div span {
+  color:#A6C8FF;
+  font-weight:600;
+  font-size:0.9rem;
+}
+
+/* Listener count & mini graph */
+.release-card .track-listeners {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background:#0A0F1E;
+  border-radius:10px;
+  padding:8px 10px;
+  margin-bottom:10px;
+  font-size:0.85rem;
+  color:#ccc;
+}
+
+.release-card .track-listeners span {
+  color:#A6C8FF;
+  font-weight:600;
+}
+
+.release-card .mini-graph {
+  width:60px;
+  height:20px;
+  display:flex;
+  gap:2px;
+  align-items:flex-end;
+}
+
+.release-card .mini-graph div {
+  width:4px;
+  background:#2D6DAB;
+  transition:0.3s;
+  border-radius:2px;
+}
+
+</style>
+</head>
+
+<body>
+<div class="dashboard-wrapper">
+
+  <div class="dashboard-content">
+
+    <div class="sidebar">
+        <div class="sidebar-logo" style="text-align:center; margin-bottom:15px;">
+    <img src="logo.jpeg" alt="D&B Minstrel Logo" style="width:80px; height:80px; border-radius:50%; border:2px solid #A6C8FF;">
+  </div>
+      <h2>D&B Minstrel</h2>
+      <a href="artist_dashboard.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="artist_dashboard.html" id="sidebarUploadBtn"><i class="fa-solid fa-upload"></i> Upload Track</a>
+      <a href="releases.html"><i class="fa-solid fa-music"></i> My Songs</a>
+      <a href="analytics.html"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+      <a href="activity.html"><i class="fa-solid fa-book"></i> Activity</a>
+      <a href="payments.html"><i class="fa-solid fa-wallet"></i> Payments</a>
+      <a href="settings.html"><i class="fa-solid fa-user-cog"></i> Settings</a>
+      <a href="support.html"><i class="fa-solid fa-circle-question"></i> Support</a>
+    </div>
+
+    <div class="main">
+      <div class="main-header">
+        <h1>Welcome, Artist Name</h1>
+        <button onclick="alert('Logout clicked!')">Logout</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat-card"><h3 id="totalStreams">0</h3><p>Total Streams</p></div>
+        <div class="stat-card"><h3 id="totalDownloads">0</h3><p>Total Downloads</p></div>
+        <div class="stat-card"><h3 id="totalListeners">0</h3><p>Total Listeners</p></div>
+        <div class="stat-card"><h3 id="earnings">$0.00</h3><p>Earnings</p></div>
+      </div>
+
+      <button class="upload-btn" id="openModalBtn">+ Upload New Track</button>
+
+      <div class="releases">
+        <h2>Recent Uploads</h2>
+        <div class="release-grid" id="releaseGrid"></div>
+      </div>
+
+      <div class="activity">
+        <h2>Activity Feed</h2>
+        <ul id="activityFeed"></ul>
+      </div>
+
+      <div class="payments">
+        <h2>Payment History</h2>
+        <table>
+          <tr><th>Date</th><th>Amount</th><th>Status</th></tr>
+          <tr><td>2025-12-01</td><td>$0.00</td><td>Pending</td></tr>
+          <tr><td>2025-11-15</td><td>$0.00</td><td>Paid</td></tr>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>© 2025 D&B Minstrel | All rights reserved</footer>
+
+  <!-- Upload Modal -->
+  <div class="modal" id="uploadModal">
+    <div class="modal-content">
+      <span class="close-modal" id="closeModal">&times;</span>
+      <h2>Upload New Track</h2>
+      <form id="uploadForm">
+        <label>Track Title</label>
+        <input type="text" id="trackTitle" placeholder="Enter track title" required>
+
+        <label>Artist Name</label>
+        <input type="text" id="artistName" placeholder="Artist name" required>
+
+        <label>Featured Artists (optional)</label>
+        <input type="text" id="featuredArtists" placeholder="Enter featured artists, separated by commas">
+
+        <label>Songwriters / Producers</label>
+        <input type="text" id="songwriters" placeholder="Songwriters and producers" required>
+
+        <label>Lyrics</label>
+        <textarea id="lyrics" rows="4" placeholder="Enter lyrics"></textarea>
+
+        <label>Release Date</label>
+        <input type="date" id="releaseDate" required>
+
+        <label>Audio File (WAV/FLAC)</label>
+        <input type="file" id="audioFile" accept=".wav,.flac" required>
+
+        <label>Cover Art (3000x3000)</label>
+        <input type="file" id="coverArt" accept="image/*" required>
+
+        <button type="submit">Upload Track</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const modal = document.getElementById('uploadModal');
+const openBtn = document.getElementById('openModalBtn');
+const sidebarUploadBtn = document.getElementById('sidebarUploadBtn');
+const closeBtn = document.getElementById('closeModal');
+const uploadForm = document.getElementById('uploadForm');
+const releaseGrid = document.getElementById('releaseGrid');
+const activityFeed = document.getElementById('activityFeed');
+
+openBtn.onclick = () => modal.style.display='flex';
+sidebarUploadBtn.onclick = () => modal.style.display='flex';
+closeBtn.onclick = () => modal.style.display='none';
+window.onclick = e => { if(e.target===modal) modal.style.display='none'; }
+
+// Global stats
+let stats = { streams:0, downloads:0, listeners:0, earnings:0 };
+if(localStorage.getItem('dashboardStats')){
+  stats = JSON.parse(localStorage.getItem('dashboardStats'));
+  updateStats();
+}
+
+// Releases and Activity
+let releasesData = JSON.parse(localStorage.getItem('releaseData') || '[]');
+let activityData = JSON.parse(localStorage.getItem('activityData') || '[]');
+const MAX_ACTIVITY_DISPLAY = 5;
+
+// Ensure legacy string activities have timestamps
+activityData = activityData.map(a => {
+  if(a && typeof a === 'object' && a.timestamp) return a;
+  return { message: a.message || a, timestamp: a.timestamp || Date.now() };
+});
+
+// Sort by timestamp descending
+activityData.sort((a,b) => b.timestamp - a.timestamp);
+
+// Initial render
+renderActivityFeed();
+renderDashboardReleases();
+
+// ---------------- Activity ----------------
+function renderActivityFeed() {
+  activityFeed.innerHTML = '';
+  activityData.slice(0, MAX_ACTIVITY_DISPLAY).forEach(entry => {
+    const li = document.createElement('li');
+    const time = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '';
+    li.innerHTML = `<span>${entry.message}</span> <span class="activity-date">${time}</span>`;
+    activityFeed.appendChild(li);
+  });
+}
+
+// Save a new activity with exact timestamp
+function saveActivity(message){
+  const timestamp = Date.now();
+  activityData.unshift({message, timestamp});
+  localStorage.setItem('activityData', JSON.stringify(activityData));
+  renderActivityFeed();
+}
+
+// ---------------- Stats ----------------
+function updateStats() {
+  document.getElementById('totalStreams').innerText = stats.streams;
+  document.getElementById('totalDownloads').innerText = stats.downloads;
+  document.getElementById('totalListeners').innerText = stats.listeners;
+  document.getElementById('earnings').innerText = `$${stats.earnings.toFixed(2)}`;
+  localStorage.setItem('dashboardStats', JSON.stringify(stats));
+}
+
+// ---------------- Releases ----------------
+function saveRelease(release){
+  releasesData.unshift(release);
+  localStorage.setItem('releaseData', JSON.stringify(releasesData));
+}
+
+// Update existing release after play/download
+function saveUpdatedRelease(release, trackStats){
+  const idx = releasesData.findIndex(r => r.title===release.title && r.releaseDate===release.releaseDate);
+  if(idx!==-1){
+    releasesData[idx] = { ...release, ...trackStats };
+    localStorage.setItem('releaseData', JSON.stringify(releasesData));
+  }
+}
+
+// ---------------- Render Dashboard ----------------
+function renderDashboardReleases() {
+  releaseGrid.innerHTML = '';
+  const sortedReleases = [...releasesData].sort((a,b)=> new Date(b.releaseDate) - new Date(a.releaseDate));
+  const recentReleases = sortedReleases.slice(0,3);
+  recentReleases.forEach(addReleaseCard);
+
+  // "View All Releases" link
+  const viewAllLink = document.createElement('div');
+  viewAllLink.style.textAlign = 'center';
+  viewAllLink.style.marginTop = '15px';
+  viewAllLink.innerHTML = `<a href="releases.html" style="color:#2D6DAB; font-weight:600;">View All Songs &raquo;</a>`;
+  releaseGrid.appendChild(viewAllLink);
+}
+
+// ---------------- Add release card ----------------
+function addReleaseCard(release){
+  const {title, releaseDate, imgSrc, streams=0, downloads=0, listeners=0, earnings=0, artist="Unknown"} = release;
+
+  const card = document.createElement('div');
+  card.className = 'release-card';
+  card.innerHTML = `
+    <img src="${imgSrc}" alt="${title}">
+    <h3>${title}</h3>
+    <p>Artist: ${artist}</p>
+    <p>Release Date: ${releaseDate}</p>
+
+    <div class="track-stats">
+      <div><span class="track-streams">${streams}</span> Streams</div>
+      <div><span class="track-downloads">${downloads}</span> Downloads</div>
+      <div><span class="track-earnings">${earnings.toFixed(2)}</span> $</div>
+    </div>
+
+    <div class="track-listeners">
+      <span class="track-listener-count">${listeners}</span> Listeners
+      <div class="mini-graph">
+        ${Array(10).fill(0).map(()=>'<div style="height:' + (Math.floor(Math.random()*10+5)) + 'px"></div>').join('')}
+      </div>
+    </div>
+
+    <div class="stream-links">
+      <a href="#" class="play-btn">Play</a>
+      <a href="#" class="download-btn">Download</a>
+    </div>
+  `;
+  releaseGrid.prepend(card);
+
+  let trackStats = { streams, downloads, listeners, earnings };
+  const playedListeners = new Set();
+
+  const playBtn = card.querySelector('.play-btn');
+  const downloadBtn = card.querySelector('.download-btn');
+  const trackStreamsEl = card.querySelector('.track-streams');
+  const trackDownloadsEl = card.querySelector('.track-downloads');
+  const trackEarningsEl = card.querySelector('.track-earnings');
+  const trackListenersEl = card.querySelector('.track-listener-count');
+  const miniGraph = card.querySelectorAll('.mini-graph div');
+
+  function animateMiniGraph(){
+    miniGraph.forEach(div => div.style.height = Math.floor(Math.random()*10+5)+'px');
+  }
+
+  playBtn.addEventListener('click', e=>{
+    e.preventDefault();
+    trackStats.streams++;
+    stats.streams++;
+
+    const listenerId = Math.floor(Math.random()*10000);
+    if(!playedListeners.has(listenerId)){
+      trackStats.listeners++;
+      stats.listeners++;
+      playedListeners.add(listenerId);
+    }
+    trackStats.earnings +=0.01;
+    stats.earnings +=0.01;
+
+    trackStreamsEl.innerText = trackStats.streams;
+    trackDownloadsEl.innerText = trackStats.downloads;
+    trackEarningsEl.innerText = trackStats.earnings.toFixed(2);
+    trackListenersEl.innerText = trackStats.listeners;
+
+    animateMiniGraph();
+    updateStats();
+    saveActivity(`Track Played: "${title}" played`);
+    saveUpdatedRelease(release, trackStats);
+  });
+
+  downloadBtn.addEventListener('click', e=>{
+    e.preventDefault();
+    trackStats.downloads++;
+    stats.downloads++;
+    trackStats.earnings +=0.5;
+    stats.earnings +=0.5;
+
+    trackStreamsEl.innerText = trackStats.streams;
+    trackDownloadsEl.innerText = trackStats.downloads;
+    trackEarningsEl.innerText = trackStats.earnings.toFixed(2);
+
+    updateStats();
+    saveActivity(`Track Downloaded: "${title}" downloaded`);
+    saveUpdatedRelease(release, trackStats);
+  });
+}
+
+// ---------------- Upload Form ----------------
+uploadForm.addEventListener('submit', function(e){
+  e.preventDefault();
+  const title = document.getElementById('trackTitle').value;
+  const mainArtist = document.getElementById('artistName').value || 'Unknown';
+  const featuredArtists = document.getElementById('featuredArtists').value;
+  const releaseDate = document.getElementById('releaseDate').value;
+  const coverFile = document.getElementById('coverArt').files[0];
+
+  if(!coverFile) return alert('Please select a cover image.');
+
+  const reader = new FileReader();
+  reader.onload = function(event){
+    const imgSrc = event.target.result;
+    const artistDisplay = featuredArtists ? `${mainArtist} ft ${featuredArtists}` : mainArtist;
+
+    const release = {
+      title,
+      artist: artistDisplay,
+      releaseDate,
+      imgSrc,
+      streams:0,
+      downloads:0,
+      listeners:0,
+      earnings:0,
+      status: new Date(releaseDate) > new Date() ? "pending" : "released"
+    };
+
+    saveRelease(release);
+    saveActivity(`Track Upload: "${title}" uploaded`); // now stores exact timestamp
+    addReleaseCard(release); // render immediately
+    updateStats();
+
+    modal.style.display='none';
+    uploadForm.reset();
+  }
+  reader.readAsDataURL(coverFile);
+});
+</script>
+
+
+</body>
+</html>

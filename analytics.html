@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>D&B Minstrel — Analytics</title>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Charts loader -->
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+  <style>
+    :root{
+      --bg:#0A0F1E;
+      --card:#10162E;
+      --accent:#2D6DAB;
+      --accent-2:#4092D0;
+      --muted:#A6C8FF;
+      --text:#fff;
+      --muted-gray:#ccc;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      background:var(--bg);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      min-height:100vh;
+    }
+
+    .dashboard-wrapper { display:flex; flex-direction:column; min-height:100vh; background:#0A0F1E; color:#fff; }
+    .dashboard-content { display:flex; flex:1; overflow:hidden; }
+
+
+    /* Sidebar */
+      .sidebar {
+       width:250px; background:#10162E; padding:30px 20px; display:flex; flex-direction:column; gap:20px; height:100%; overflow-y:auto; position:sticky; top:0;
+    }
+       .sidebar h2 { color:#A6C8FF; margin-bottom:20px; text-align:center; }
+       .sidebar a { display:flex; align-items:center; gap:15px; padding:10px 15px; color:#fff; border-radius:10px; transition:0.3s; white-space: nowrap; }
+       .sidebar a:hover { background:#2D6DAB; }
+
+    /* Layout */
+    .container{max-width:1280px;margin:24px auto;padding:0 20px;}
+    .top-row{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .title{display:flex;gap:12px;align-items:center}
+    .title h1{font-size:20px;color:var(--muted);margin:0}
+    .controls{display:flex;gap:12px;align-items:center}
+
+    /* Summary cards */
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.45);min-height:88px}
+    .card .label{font-size:13px;color:var(--muted-gray);margin-bottom:8px}
+    .card .value{font-size:20px;color:var(--text);font-weight:700}
+
+    /* Charts area */
+.charts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns of equal width */
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  background: var(--card);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card canvas {
+  width: 100%;
+  height: auto;           /* let Chart.js control height */
+  max-height: 400px;      /* limit max height */
+}
+
+/* Responsive: stack on smaller screens */
+@media (max-width: 900px) {
+  .charts {
+    grid-template-columns: 1fr; /* single column on small screens */
+  }
+}
+
+
+    /* Top tracks + table */
+    .bottom-row{display:grid;grid-template-columns:1fr 420px;gap:16px}
+    .table-card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.45);overflow:auto}
+    table{width:100%;border-collapse:collapse;color:var(--text);font-size:14px}
+    th,td{padding:10px;border-bottom:1px solid rgba(45,109,171,0.12);text-align:left}
+    th{color:var(--muted);font-weight:600}
+    .small-muted{font-size:12px;color:var(--muted-gray)}
+
+    /* Country map card */
+    .map-card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.45);overflow:hidden}
+    .map-card h3{margin:0 0 10px 0;color:var(--muted)}
+
+    /* responsive */
+    @media(max-width:900px){
+      .charts{grid-template-columns:1fr}
+      .bottom-row{grid-template-columns:1fr}
+    }
+
+    /* small ui */
+    .select, .btn { background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);padding:8px 12px;border-radius:10px;font-weight:600;cursor:pointer }
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));border:none}
+    .kpi-inline{display:flex;gap:12px;align-items:center}
+    .kpi-inline .mini{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;font-size:13px}
+  
+    /* Footer */
+footer { text-align:center; padding:20px 5%; background:#10162E; color:#fff; border-top:1px solid #4092D0; flex-shrink:0; }
+/* Responsive */
+@media(max-width:900px){ .dashboard-content { flex-direction: column; } .sidebar { width:100%; height:auto; flex-direction:row; overflow-x:auto; padding:15px; } .sidebar a { white-space: nowrap; } .main { padding:20px; } .stats { flex-direction:column; }}
+
+  
+  </style>
+</head>
+<body>
+
+    <div class="dashboard-content">
+
+    <div class="sidebar">
+        <div class="sidebar-logo" style="text-align:center; margin-bottom:15px;">
+    <img src="logo.jpeg" alt="D&B Minstrel Logo" style="width:80px; height:80px; border-radius:50%; border:2px solid #A6C8FF;">
+  </div>
+      <h2>D&B Minstrel</h2>
+      <a href="artist_dashboard.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="artist_dashboard.html" id="sidebarUploadBtn"><i class="fa-solid fa-upload"></i> Upload Track</a>
+      <a href="releases.html"><i class="fa-solid fa-music"></i> My Songs</a>
+      <a href="analytics.html"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+      <a href="activity.html"><i class="fa-solid fa-book"></i> Activity</a>
+      <a href="payments.html"><i class="fa-solid fa-wallet"></i> Payments</a>
+      <a href="settings.html"><i class="fa-solid fa-user-cog"></i> Settings</a>
+      <a href="support.html"><i class="fa-solid fa-circle-question"></i> Support</a>
+    </div>
+
+  <div class="container">
+    <div class="top-row">
+      <div class="title">
+        <h1>Analytics — D&B Minstrel</h1>
+      </div>
+
+      <div class="controls">
+        <select id="timeframe" class="select" title="Timeframe">
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="365" selected>Last 365 days</option>
+          <option value="all">All time</option>
+        </select>
+
+        <select id="trackFilter" class="select" title="Filter by track">
+          <option value="all">All tracks</option>
+        </select>
+
+        <button id="refreshBtn" class="btn">Refresh</button>
+      </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="cards">
+      <div class="card">
+        <div class="label">Total Streams</div>
+        <div class="value" id="kpiStreams">0</div>
+        <div class="small-muted">Streams across selected timeframe</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Total Downloads</div>
+        <div class="value" id="kpiDownloads">0</div>
+        <div class="small-muted">Downloads across selected timeframe</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Total Listeners</div>
+        <div class="value" id="kpiListeners">0</div>
+        <div class="small-muted">Unique listeners</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Total Earnings</div>
+        <div class="value" id="kpiEarnings">$0.00</div>
+        <div class="small-muted">Gross revenue (simulated)</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts">
+  <div class="chart-card">
+    <h3>Streams Over Time</h3>
+    <canvas id="streamsChart" height="180"></canvas>
+  </div>
+
+  <div class="chart-card">
+    <h3>Revenue Over Time</h3>
+    <canvas id="revenueChart" height="180"></canvas>
+  </div>
+
+  <div class="chart-card">
+    <h3>Uploads Over Time</h3>
+    <canvas id="uploadsChart" height="140"></canvas>
+  </div>
+
+  <div class="chart-card">
+    <h3>Platform Breakdown</h3>
+    <canvas id="platformChart" height="140"></canvas>
+  </div>
+</div>
+
+
+    <!-- bottom row: top tracks + map -->
+    <div class="bottom-row">
+      <div class="table-card">
+        <h3 style="color:var(--muted);margin:0 0 12px 0">Top Tracks</h3>
+        <table id="topTracksTable" style="min-width:600px">
+          <thead><tr><th>Track</th><th>Streams</th><th>Downloads</th><th>Earnings</th><th>Release Date</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="map-card">
+        <h3>Streams by Country</h3>
+        <div id="geo_map" style="width:100%;height:320px"></div>
+        <div style="height:10px"></div>
+        <div class="small-muted">Table below shows top countries by streams</div>
+        <div id="countryTableWrapper" style="margin-top:10px;max-height:180px;overflow:auto"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <footer>© 2025 D&B Minstrel | All rights reserved</footer>
+
+
+<script>
+const DEFAULT_PLATFORMS = ['Spotify','Apple Music','Boomplay','Audiomack','YouTube'];
+const theme = {
+  bg: getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#0A0F1E',
+  accent: '#2D6DAB',
+  accent2: '#4092D0',
+  muted: '#A6C8FF',
+  card: '#10162E',
+  text: '#fff'
+};
+
+function loadReleases(){
+  try {
+    const raw = localStorage.getItem('releaseData');
+    if(!raw) return [];
+    const arr = JSON.parse(raw);
+    return arr.map(r => ({
+      title: r.title || 'Untitled',
+      releaseDate: r.releaseDate || null,
+      imgSrc: r.imgSrc || '',
+      streams: Number(r.streams||0),
+      downloads: Number(r.downloads||0),
+      listeners: Number(r.listeners||0),
+      earnings: Number(r.earnings||0),
+      platforms: r.platforms || null
+    }));
+  } catch(e){ console.error(e); return []; }
+}
+
+function saveCountryData(data){ localStorage.setItem('countryData', JSON.stringify(data)); }
+function loadCountryData(){ try{ return JSON.parse(localStorage.getItem('countryData')||'{}'); }catch(e){return {};} }
+
+function seedIfEmpty(){
+  const releases = loadReleases();
+  if(releases.length) return releases;
+  const now = new Date();
+  const sample = [
+    {title:'Lights Off', releaseDate:formatDateOffset(now,-200), streams:8200, downloads:120, listeners:4100, earnings:8200*0.01+120*0.5, imgSrc:'https://via.placeholder.com/300x300/2D6DAB/ffffff?text=Lights'},
+    {title:'Higher', releaseDate:formatDateOffset(now,-120), streams:4100, downloads:80, listeners:2100, earnings:4100*0.01+80*0.5, imgSrc:'https://via.placeholder.com/300x300/2D6DAB/ffffff?text=Higher'},
+    {title:'Real Love', releaseDate:formatDateOffset(now,-40), streams:2100, downloads:50, listeners:1200, earnings:2100*0.01+50*0.5, imgSrc:'https://via.placeholder.com/300x300/2D6DAB/ffffff?text=Love'}
+  ];
+  localStorage.setItem('releaseData', JSON.stringify(sample));
+  return sample;
+}
+
+function formatDateOffset(base,daysOffset){
+  const d = new Date(base);
+  d.setDate(d.getDate()+daysOffset);
+  return d.toISOString().slice(0,10);
+}
+
+function buildAggregates(releases, timeframeDays){
+  const now = new Date();
+  let months = 12;
+  if(timeframeDays==='30') months = 1;
+  else if(timeframeDays==='90') months = 3;
+  else if(timeframeDays==='365') months = 12;
+  else if(timeframeDays==='all') months = 24;
+
+  const labels = [];
+  const monthDates = [];
+  for(let i=months-1;i>=0;i--){
+    const m = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    labels.push(m.toLocaleString('default',{month:'short', year:'numeric'}));
+    monthDates.push(m);
+  }
+
+  const streamsSeries = new Array(labels.length).fill(0);
+  const downloadsSeries = new Array(labels.length).fill(0);
+  const earningsSeries = new Array(labels.length).fill(0);
+
+  releases.forEach(r=>{
+    const totalStreams = Math.max(0, r.streams||0);
+    const totalDownloads = Math.max(0, r.downloads||0);
+    const totalEarnings = Math.max(0, r.earnings||0);
+
+    let startIdx = 0;
+    if(r.releaseDate){
+      const rd = new Date(r.releaseDate);
+      for(let i=0;i<monthDates.length;i++){
+        if(rd.getFullYear()===monthDates[i].getFullYear() && rd.getMonth()===monthDates[i].getMonth()){
+          startIdx = i; break;
+        }
+      }
+    }
+
+    const monthsToDistribute = labels.length - startIdx;
+    if(monthsToDistribute <= 0) return;
+
+    const baseStream = Math.floor(totalStreams / monthsToDistribute);
+    const baseDownload = Math.floor(totalDownloads / monthsToDistribute);
+    const baseEarning = totalEarnings / monthsToDistribute;
+
+    for(let i=startIdx;i<labels.length;i++){
+      streamsSeries[i] += baseStream;
+      downloadsSeries[i] += baseDownload;
+      earningsSeries[i] += baseEarning;
+    }
+
+    // distribute remainder to last month
+    const remStreams = totalStreams - baseStream*monthsToDistribute;
+    const remDownloads = totalDownloads - baseDownload*monthsToDistribute;
+    const remEarnings = totalEarnings - baseEarning*monthsToDistribute;
+    streamsSeries[labels.length-1] += remStreams;
+    downloadsSeries[labels.length-1] += remDownloads;
+    earningsSeries[labels.length-1] += remEarnings;
+  });
+
+  const totals = {
+    streams: streamsSeries.reduce((a,b)=>a+b,0),
+    downloads: downloadsSeries.reduce((a,b)=>a+b,0),
+    earnings: earningsSeries.reduce((a,b)=>a+b,0),
+    listeners: releases.reduce((a,r)=>a+(r.listeners||0),0)
+  };
+
+  return {labels, streamsSeries, downloadsSeries, earningsSeries, totals};
+}
+
+// Platform breakdown & country distribution remain unchanged
+function buildPlatformBreakdown(releases){
+  const platformTotals = {};
+  DEFAULT_PLATFORMS.forEach(p=>platformTotals[p]=0);
+  releases.forEach((r, idx)=>{
+    if(r.platforms && typeof r.platforms==='object'){
+      Object.keys(r.platforms).forEach(p=>{
+        platformTotals[p] = (platformTotals[p]||0) + Number(r.platforms[p]||0);
+      });
+    } else {
+      const seed = Math.abs(hashCode(r.title||'t'+idx));
+      const weights = DEFAULT_PLATFORMS.map((p,i)=>(seed%(i+3)+1));
+      const sum = weights.reduce((a,b)=>a+b,0);
+      DEFAULT_PLATFORMS.forEach((p,i)=>{
+        platformTotals[p] += Math.round(weights[i]/sum*(r.streams||0));
+      });
+    }
+  });
+  return Object.keys(platformTotals).map(k=>({platform:k,value:platformTotals[k]})).sort((a,b)=>b.value-a.value);
+}
+function hashCode(str){ let h=0; for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i); h|=0;} return h; }
+
+function buildCountryDistribution(releases){
+  let countryData = loadCountryData();
+  if(countryData && Object.keys(countryData).length>0) return countryData;
+  const pool = ['US','GB','NG','KE','UG','ZA','DE','FR','BR','ZA','TZ','CM'];
+  const cd = {};
+  releases.forEach((r, idx)=>{
+    const base = r.streams||0;
+    const seed = Math.abs(hashCode(r.title||idx+''));
+    const c1 = pool[seed%pool.length];
+    const c2 = pool[(seed+3)%pool.length];
+    const c3 = pool[(seed+7)%pool.length];
+    cd[c1] = (cd[c1]||0) + Math.round(base*0.6);
+    cd[c2] = (cd[c2]||0) + Math.round(base*0.3);
+    cd[c3] = (cd[c3]||0) + Math.round(base*0.1);
+  });
+  Object.keys(cd).forEach(k=>{if(cd[k]<5) cd[k]=Math.round(cd[k]*2)});
+  saveCountryData(cd);
+  return cd;
+}
+
+// UI functions remain mostly unchanged
+function populateTrackFilter(releases){
+  const sel = document.getElementById('trackFilter');
+  sel.innerHTML = '<option value="all">All tracks</option>';
+  releases.forEach((r, idx)=>{const opt=document.createElement('option'); opt.value=idx; opt.textContent=r.title; sel.appendChild(opt);});
+}
+
+function buildTopTracksTable(releases){
+  const tbody = document.querySelector('#topTracksTable tbody');
+  tbody.innerHTML = '';
+  const sorted = releases.slice().sort((a,b)=>(b.streams||0)-(a.streams||0));
+  sorted.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="display:flex;gap:10px;align-items:center">
+        <img src="${r.imgSrc||'https://via.placeholder.com/60x60/2D6DAB/ffffff?text=DB'}" style="width:44px;height:44px;border-radius:6px;object-fit:cover"/>
+        <div><div style="font-weight:700">${r.title}</div><div class="small-muted">${r.platforms?Object.keys(r.platforms).join(', '):''}</div></div>
+      </td>
+      <td>${r.streams}</td><td>${r.downloads}</td><td>$${r.earnings.toFixed(2)}</td><td>${r.releaseDate||'-'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+let uploadsChart;
+
+function buildUploadData(releases, timeframeDays) {
+  const now = new Date();
+  let months = 12;
+  if(timeframeDays==='30') months=1;
+  else if(timeframeDays==='60') months=2;
+  else if(timeframeDays==='90') months=3;
+  else if(timeframeDays==='180') months=6;
+  else if(timeframeDays==='365') months=12;
+  else if(timeframeDays==='all') months=24;
+
+  const labels = [];
+  const monthDates = [];
+  for(let i=months-1;i>=0;i--){
+    const m = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    labels.push(m.toLocaleString('default',{month:'short', year:'numeric'}));
+    monthDates.push(m);
+  }
+
+  const uploadsSeries = new Array(labels.length).fill(0);
+
+  releases.forEach(r=>{
+    if(!r.releaseDate) return;
+    const rd = new Date(r.releaseDate);
+    monthDates.forEach((md, idx)=>{
+      if(rd.getFullYear()===md.getFullYear() && rd.getMonth()===md.getMonth()){
+        uploadsSeries[idx] += 1;
+      }
+    });
+  });
+
+  return {labels, uploadsSeries};
+}
+
+
+// Chart rendering
+let streamsChart, revenueChart, platformChart;
+const chartOptions = {responsive:true, maintainAspectRatio:false};
+
+function renderCharts(releases, timeframe){
+  const agg = buildAggregates(releases, String(timeframe));
+  document.getElementById('kpiStreams').innerText = agg.totals.streams;
+  document.getElementById('kpiDownloads').innerText = agg.totals.downloads;
+  document.getElementById('kpiListeners').innerText = agg.totals.listeners;
+  document.getElementById('kpiEarnings').innerText = `$${agg.totals.earnings.toFixed(2)}`;
+
+  if(streamsChart) streamsChart.destroy();
+  if(revenueChart) revenueChart.destroy();
+  if(platformChart) platformChart.destroy();
+
+  const ctx1 = document.getElementById('streamsChart').getContext('2d');
+  streamsChart = new Chart(ctx1,{
+    type:'line',
+    data:{labels:agg.labels,datasets:[{label:'Streams',data:agg.streamsSeries,borderColor:theme.accent,backgroundColor:'rgba(45,109,171,0.14)',fill:true,tension:0.35,pointRadius:3}]},
+    options:{...chartOptions,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:theme.muted}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:theme.muted}}}}
+  });
+
+  const ctx2 = document.getElementById('revenueChart').getContext('2d');
+  revenueChart = new Chart(ctx2,{
+    type:'bar',
+    data:{labels:agg.labels,datasets:[{label:'Earnings ($)',data:agg.earningsSeries.map(v=>parseFloat(v.toFixed(2))),backgroundColor:theme.accent}]},
+    options:{...chartOptions,plugins:{legend:{display:false}},scales:{x:{ticks:{color:theme.muted},grid:{display:false}},y:{ticks:{color:theme.muted},grid:{color:'rgba(255,255,255,0.03)'}}}}
+  });
+
+  const plat = buildPlatformBreakdown(releases);
+  const ctx3 = document.getElementById('platformChart').getContext('2d');
+  platformChart = new Chart(ctx3,{
+    type:'doughnut',
+    data:{labels:plat.map(p=>p.platform),datasets:[{data:plat.map(p=>p.value),backgroundColor:['#2D6DAB','#4092D0','#74B3FF','#6BD3B6','#F0A500']}]},
+    options:{...chartOptions,plugins:{legend:{position:'bottom',labels:{color:theme.muted}}}}
+  });
+
+  buildTopTracksTable(releases);
+  renderGeoChart(releases);
+
+  const uploadData = buildUploadData(releases, String(timeframe));
+const ctx4 = document.getElementById('uploadsChart').getContext('2d');
+if(uploadsChart) uploadsChart.destroy();
+uploadsChart = new Chart(ctx4, {
+  type:'bar',
+  data:{
+    labels: uploadData.labels,
+    datasets:[{
+      label:'Uploads',
+      data: uploadData.uploadsSeries,
+      backgroundColor: theme.accent
+    }]
+  },
+  options:{
+    ...chartOptions,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:theme.muted}, grid:{display:false}},
+      y:{ticks:{color:theme.muted}, grid:{color:'rgba(255,255,255,0.03)'}}
+    }
+  }
+});
+
+}
+
+// GeoChart code unchanged
+google.charts.load('current', {'packages':['geochart']});
+function renderGeoChart(releases){
+  const countryData = buildCountryDistribution(releases);
+  const dataArr = [['Country','Streams']];
+  Object.keys(countryData).forEach(c=>dataArr.push([c,countryData[c]]));
+  google.charts.setOnLoadCallback(()=>{
+    const dataTable = google.visualization.arrayToDataTable(dataArr);
+    const options = {colorAxis:{colors:['#1b3a57',theme.accent]},backgroundColor:'transparent',datalessRegionColor:'#0A0F1E',legend:'none'};
+    const chart = new google.visualization.GeoChart(document.getElementById('geo_map'));
+    chart.draw(dataTable, options);
+    renderCountryTable(countryData);
+  });
+}
+
+function renderCountryTable(countryData){
+  const wrapper = document.getElementById('countryTableWrapper');
+  wrapper.innerHTML='';
+  const arr = Object.keys(countryData).map(k=>({country:k,streams:countryData[k]})).sort((a,b)=>b.streams-a.streams);
+  const table = document.createElement('table');
+  table.style.width='100%';
+  table.innerHTML=`<thead><tr><th style="text-align:left;color:${theme.muted}">Country</th><th style="text-align:right;color:${theme.muted}">Streams</th></tr></thead>`;
+  const tbody = document.createElement('tbody');
+  arr.forEach(row=>{const tr=document.createElement('tr'); tr.innerHTML=`<td style="padding:6px 8px">${row.country}</td><td style="padding:6px 8px;text-align:right">${row.streams}</td>`;tbody.appendChild(tr);});
+  table.appendChild(tbody);
+  wrapper.appendChild(table);
+}
+
+// UI wiring
+document.getElementById('refreshBtn').addEventListener('click',()=>initAnalytics());
+document.getElementById('timeframe').addEventListener('change',()=>initAnalytics());
+document.getElementById('trackFilter').addEventListener('change',()=>initAnalytics());
+
+function initAnalytics(){
+  let releases = loadReleases();
+  if(releases.length===0) seedIfEmpty();
+  releases = loadReleases();
+  populateTrackFilter(releases);
+
+  const filterVal = document.getElementById('trackFilter').value;
+  let filtered = releases;
+  if(filterVal !== 'all'){
+    const idx = Number(filterVal);
+    if(!isNaN(idx) && releases[idx]) filtered = [releases[idx]];
+  }
+
+  const timeframe = document.getElementById('timeframe').value;
+  renderCharts(filtered, timeframe);
+}
+
+initAnalytics();
+window.addEventListener('resize',()=>{if(streamsChart) streamsChart.resize(); if(revenueChart) revenueChart.resize(); if(platformChart) platformChart.resize();});
+</script>
+
+</body>
+</html>

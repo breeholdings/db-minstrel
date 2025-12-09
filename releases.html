@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&B Minstrel — Releases</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+* { box-sizing: border-box; margin:0; padding:0; font-family:'Montserrat',sans-serif; }
+body { background:#0A0F1E; color:#fff; min-height:100vh; }
+.container { max-width:1000px; margin:50px auto; padding:20px; }
+
+.dashboard-wrapper { display:flex; flex-direction:column; min-height:100vh; background:#0A0F1E; color:#fff; }
+.dashboard-content { display:flex; flex:1; overflow:hidden; }
+
+/* Sidebar */
+.sidebar {
+  width:250px; background:#10162E; padding:30px 20px; display:flex; flex-direction:column; gap:20px; height:100%; overflow-y:auto; position:sticky; top:0;
+}
+.sidebar h2 { color:#A6C8FF; margin-bottom:20px; text-align:center; }
+.sidebar a { display:flex; align-items:center; gap:15px; padding:10px 15px; color:#fff; border-radius:10px; transition:0.3s; white-space: nowrap; }
+.sidebar a:hover { background:#2D6DAB; }
+
+h1 { color:#A6C8FF; text-align:center; margin-bottom:20px; }
+.back-btn { display:inline-block; margin-bottom:20px; padding:8px 18px; border-radius:25px; background:#2D6DAB; color:#fff; font-weight:600; text-decoration:none; transition:0.3s; }
+.back-btn:hover { background:#4092D0; }
+.tabs { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+.tab-btn { padding:8px 18px; border-radius:25px; background:#10162E; color:#fff; font-weight:600; cursor:pointer; transition:0.3s; }
+.tab-btn.active { background:#2D6DAB; }
+.tab-btn:hover { background:#4092D0; }
+#searchInput { width:100%; padding:10px; border-radius:10px; border:none; margin-bottom:20px; background:#10162E; color:#fff; }
+.release-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 5 songs per row */
+  gap: 20px;
+}
+
+.release-card { background:#10162E; border-radius:15px; padding:15px; text-align:center; transition:0.3s; box-shadow:0 4px 15px rgba(0,0,0,0.3); }
+.release-card:hover { transform:translateY(-5px); box-shadow:0 8px 25px rgba(0,0,0,0.5); }
+.release-card img { width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:10px; }
+.release-card h3 { color:#fff; margin-bottom:5px; }
+.release-card p { color:#ccc; font-size:0.9rem; margin-bottom:10px; }
+.release-card .status { font-weight:600; padding:4px 10px; border-radius:12px; display:inline-block; margin-bottom:10px; }
+.status.released { background:#2D6DAB; color:#fff; }
+.status.pending { background:#A6C8FF; color:#10162E; }
+
+/* Footer */
+footer { text-align:center; padding:20px 5%; background:#10162E; color:#fff; border-top:1px solid #4092D0; flex-shrink:0; }
+
+/* Responsive */
+@media(max-width:900px){ .dashboard-content { flex-direction: column; } .sidebar { width:100%; height:auto; flex-direction:row; overflow-x:auto; padding:15px; } .sidebar a { white-space: nowrap; } .main { padding:20px; } .stats { flex-direction:column; }}
+
+</style>
+</head>
+<body>
+<div class="dashboard-wrapper">
+
+  <div class="dashboard-content">
+
+    <div class="sidebar">
+        <div class="sidebar-logo" style="text-align:center; margin-bottom:15px;">
+    <img src="logo.jpeg" alt="D&B Minstrel Logo" style="width:80px; height:80px; border-radius:50%; border:2px solid #A6C8FF;">
+  </div>
+      <h2>D&B Minstrel</h2>
+      <a href="artist_dashboard.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="artist_dashboard.html" id="sidebarUploadBtn"><i class="fa-solid fa-upload"></i> Upload Track</a>
+      <a href="releases.html"><i class="fa-solid fa-music"></i> My Songs</a>
+      <a href="analytics.html"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+      <a href="activity.html"><i class="fa-solid fa-book"></i> Activity</a>
+      <a href="payments.html"><i class="fa-solid fa-wallet"></i> Payments</a>
+      <a href="settings.html"><i class="fa-solid fa-user-cog"></i> Settings</a>
+      <a href="support.html"><i class="fa-solid fa-circle-question"></i> Support</a>
+    </div>
+
+<div class="container">
+  <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+  <h1>My Releases</h1>
+
+  <input type="text" id="searchInput" placeholder="Search by track or artist...">
+
+  <div class="tabs">
+    <div class="tab-btn active" data-filter="all">All Songs</div>
+    <div class="tab-btn" data-filter="released">Released</div>
+    <div class="tab-btn" data-filter="pending">Pending</div>
+  </div>
+
+  <div class="release-grid" id="releaseGrid"></div>
+</div>
+</div>
+
+<footer>© 2025 D&B Minstrel | All rights reserved</footer>
+
+<script>
+
+const releaseGrid = document.getElementById('releaseGrid');
+const searchInput = document.getElementById('searchInput');
+const tabs = document.querySelectorAll('.tab-btn');
+
+// Load releases from localStorage
+let releasesData = JSON.parse(localStorage.getItem('releaseData') || '[]');
+
+// Render releases function
+function renderReleases(filter="all", searchTerm="") {
+  releaseGrid.innerHTML = '';
+  const today = new Date();
+
+  // Map releases and determine status dynamically
+  let filtered = releasesData.map(r => {
+    const releaseDateObj = new Date(r.releaseDate);
+    const status = releaseDateObj > today ? "pending" : "released";
+    return { ...r, status };
+  });
+
+  // Filter by tab
+  if(filter !== "all") filtered = filtered.filter(r => r.status === filter);
+
+  // Filter by search
+  if(searchTerm) {
+    const term = searchTerm.toLowerCase();
+    filtered = filtered.filter(r =>
+      r.title.toLowerCase().includes(term) || (r.artist && r.artist.toLowerCase().includes(term))
+    );
+  }
+
+  // Sort by releaseDate descending
+  filtered.sort((a,b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+
+  // Render cards
+  filtered.forEach(release => {
+    const card = document.createElement('div');
+    card.className = 'release-card';
+    card.innerHTML = `
+      <img src="${release.imgSrc}" alt="${release.title}">
+      <h3>${release.title}</h3>
+      <p>Artist: ${release.artist || 'Unknown'}</p>
+      <p>Release Date: ${release.releaseDate}</p>
+      <div class="status ${release.status}">${release.status.charAt(0).toUpperCase() + release.status.slice(1)}</div>
+      <p>Streams: ${release.streams || 0} | Downloads: ${release.downloads || 0} | Earnings: $${(release.earnings||0).toFixed(2)}</p>
+    `;
+    releaseGrid.appendChild(card);
+  });
+
+  if(filtered.length === 0) {
+    releaseGrid.innerHTML = '<p style="text-align:center; color:#ccc;">No releases found.</p>';
+  }
+}
+
+// Initial render
+renderReleases();
+
+// Tab switching
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderReleases(tab.dataset.filter, searchInput.value);
+  });
+});
+
+// Search functionality
+searchInput.addEventListener('input', () => {
+  const activeTab = document.querySelector('.tab-btn.active').dataset.filter;
+  renderReleases(activeTab, searchInput.value);
+});
+
+// Function to add new track (including featured artists)
+function addRelease(track) {
+  const { title, mainArtist, featuredArtists, releaseDate, imgSrc } = track;
+  const artistDisplay = featuredArtists ? `${mainArtist} ft ${featuredArtists}` : mainArtist;
+
+  const today = new Date();
+  const status = new Date(releaseDate) > today ? "pending" : "released";
+
+  const release = {
+    title,
+    artist: artistDisplay,
+    releaseDate,
+    imgSrc,
+    streams: 0,
+    downloads: 0,
+    listeners: 0,
+    earnings: 0,
+    status
+  };
+
+  releasesData.unshift(release);
+  localStorage.setItem('releaseData', JSON.stringify(releasesData));
+
+  // Render based on current active tab
+  const activeFilter = document.querySelector('.tab-btn.active').dataset.filter;
+  renderReleases(activeFilter, searchInput.value);
+}
+</script>
+
+</body>
+</html>

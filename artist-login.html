@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D&B Minstrel — Artist Login / SignUp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; font-family: 'Montserrat', sans-serif; }
+    body { background: #0A0F1E; color: #fff; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+    .container { background: #10162E; padding: 40px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow:0 8px 20px rgba(0,0,0,0.5); text-align:center; }
+    
+    .logo img {
+  height: 80px;
+  width: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto;
+  display: block;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;               /* Start invisible for fade-in */
+  animation: fadeIn 1s forwards; /* Fade-in animation */
+}
+
+/* Hover effect */
+.logo img:hover {
+  transform: scale(1.1); 
+  box-shadow: 0 0 25px 10px rgba(66, 153, 225, 0.7); /* Stronger glow */
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+
+    .platform-title { font-size: 1.8rem; font-weight:700; color:#A6C8FF; margin-bottom: 30px; }
+
+    h2 { margin-bottom:30px; color:#A6C8FF; }
+    form { display:flex; flex-direction:column; gap:20px; }
+    input { padding:12px 15px; border-radius: 30px; border:none; font-size:1rem; width:100%; }
+    button { padding:12px; border-radius:30px; border:none; background:#2D6DAB; color:#fff; font-weight:600; transition:0.3s; cursor:pointer; }
+    button:hover { background:#4092D0; transform: translateY(-2px); }
+    .toggle { text-align:center; font-size:0.9rem; color:#ccc; }
+    .toggle span { color:#A6C8FF; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Logo and platform title -->
+<div class="logo">
+  <img src="logo.jpeg" alt="D&B Minstrel Logo">
+</div>
+<div class="platform-title">D&B Minstrel</div>
+
+
+    <!-- Form title -->
+    <h2 id="form-title">Artist Login</h2>
+    <form id="auth-form">
+      <input type="email" placeholder="Email" id="email" required>
+      <input type="password" placeholder="Password" id="password" required>
+      <button type="submit" id="submit-btn">Login</button>
+    </form>
+    <div class="toggle">
+      Don't have an account? <span id="toggle-link">Sign Up</span>
+    </div>
+  </div>
+
+  <script>
+    const formTitle = document.getElementById('form-title');
+    const toggleLink = document.getElementById('toggle-link');
+    const submitBtn = document.getElementById('submit-btn');
+    const authForm = document.getElementById('auth-form');
+
+    let isLogin = true;
+
+    toggleLink.addEventListener('click', () => {
+      isLogin = !isLogin;
+      if(isLogin){
+        formTitle.textContent = 'Artist Login';
+        submitBtn.textContent = 'Login';
+        toggleLink.textContent = 'Sign Up';
+      } else {
+        formTitle.textContent = 'Artist Sign Up';
+        submitBtn.textContent = 'Sign Up';
+        toggleLink.textContent = 'Login';
+      }
+    });
+
+    authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      if(isLogin){
+        alert(`Logging in with email: ${email}`);
+      } else {
+        alert(`Signing up with email: ${email}`);
+      }
+      authForm.reset();
+    });
+  </script>
+
+</body>
+</html>

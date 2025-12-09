@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&B Minstrel — Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+* { box-sizing: border-box; margin:0; padding:0; font-family:'Montserrat',sans-serif; }
+body { background:#0A0F1E; color:#fff; min-height:100vh; }
+.dashboard-wrapper { display:flex; flex-direction:column; min-height:100vh; }
+.dashboard-content { display:flex; flex:1; overflow:hidden; }
+.sidebar {
+  width:250px; background:#10162E; padding:30px 20px; display:flex; flex-direction:column; gap:20px; height:100%; overflow-y:auto; position:sticky; top:0;
+}
+.sidebar h2 { color:#A6C8FF; margin-bottom:20px; text-align:center; }
+.sidebar a { display:flex; align-items:center; gap:15px; padding:10px 15px; color:#fff; border-radius:10px; transition:0.3s; white-space: nowrap; }
+.sidebar a:hover { background:#2D6DAB; }
+
+.container { max-width:900px; margin:50px auto; padding:20px; flex:1; }
+h1 { color:#A6C8FF; margin-bottom:20px; text-align:center; }
+
+form { display:flex; flex-direction:column; gap:20px; background:#10162E; padding:30px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.3); }
+form label { font-weight:600; }
+form input, form select { padding:10px; border-radius:10px; border:none; background:#0A0F1E; color:#fff; }
+form input[type="file"] { padding:5px; }
+form button { padding:10px 20px; border:none; border-radius:25px; background:#2D6DAB; color:#fff; font-weight:600; cursor:pointer; transition:0.3s; }
+form button:hover { background:#4092D0; }
+
+.profile-preview { display:flex; align-items:center; gap:15px; margin-bottom:20px; }
+.profile-preview img { width:80px; height:80px; border-radius:50%; border:2px solid #A6C8FF; object-fit:cover; }
+
+footer { text-align:center; padding:20px 5%; background:#10162E; color:#fff; border-top:1px solid #4092D0; flex-shrink:0; }
+
+@media(max-width:900px){ .dashboard-content { flex-direction: column; } .sidebar { width:100%; height:auto; flex-direction:row; overflow-x:auto; padding:15px; } .sidebar a { white-space: nowrap; } }
+</style>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  <div class="dashboard-content">
+    <div class="sidebar">
+      <div class="sidebar-logo" style="text-align:center; margin-bottom:15px;">
+        <img src="logo.jpeg" alt="D&B Minstrel Logo" style="width:80px; height:80px; border-radius:50%; border:2px solid #A6C8FF;">
+      </div>
+      <h2>D&B Minstrel</h2>
+      <a href="artist_dashboard.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="artist_dashboard.html" id="sidebarUploadBtn"><i class="fa-solid fa-upload"></i> Upload Track</a>
+      <a href="releases.html"><i class="fa-solid fa-music"></i> My Songs</a>
+      <a href="analytics.html"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+      <a href="activity.html"><i class="fa-solid fa-book"></i> Activity</a>
+      <a href="payments.html"><i class="fa-solid fa-wallet"></i> Payments</a>
+      <a href="settings.html"><i class="fa-solid fa-user-cog"></i> Settings</a>
+      <a href="support.html"><i class="fa-solid fa-circle-question"></i> Support</a>
+    </div>
+
+    <div class="container">
+      <h1>Settings</h1>
+
+      <!-- Profile Section -->
+      <form id="settingsForm">
+        <div class="profile-preview">
+          <img id="profilePreview" src="default_profile.jpg" alt="Profile Picture">
+          <input type="file" id="profilePic" accept="image/*">
+        </div>
+
+        <label for="artistName">Artist Name</label>
+        <input type="text" id="artistName" placeholder="Your Artist Name">
+
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="your@email.com">
+
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="New Password">
+
+        <label for="instagram">Instagram</label>
+        <input type="text" id="instagram" placeholder="Instagram URL">
+
+        <label for="youtube">YouTube</label>
+        <input type="text" id="youtube" placeholder="YouTube URL">
+
+        <label for="spotify">Spotify</label>
+        <input type="text" id="spotify" placeholder="Spotify URL">
+
+        <button type="submit">Save Settings</button>
+      </form>
+    </div>
+  </div>
+
+  <footer>© 2025 D&B Minstrel | All rights reserved</footer>
+</div>
+
+<script>
+// Load settings from localStorage
+let settings = JSON.parse(localStorage.getItem('userSettings')) || {};
+
+// Populate form fields
+function loadSettings() {
+  if(settings.profilePic) document.getElementById('profilePreview').src = settings.profilePic;
+  if(settings.artistName) document.getElementById('artistName').value = settings.artistName;
+  if(settings.email) document.getElementById('email').value = settings.email;
+  if(settings.password) document.getElementById('password').value = settings.password;
+  if(settings.instagram) document.getElementById('instagram').value = settings.instagram;
+  if(settings.youtube) document.getElementById('youtube').value = settings.youtube;
+  if(settings.spotify) document.getElementById('spotify').value = settings.spotify;
+}
+loadSettings();
+
+// Preview uploaded profile picture
+document.getElementById('profilePic').addEventListener('change', function(){
+  const file = this.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = e => document.getElementById('profilePreview').src = e.target.result;
+    reader.readAsDataURL(file);
+  }
+});
+
+// Save settings
+document.getElementById('settingsForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  settings.profilePic = document.getElementById('profilePreview').src;
+  settings.artistName = document.getElementById('artistName').value;
+  settings.email = document.getElementById('email').value;
+  settings.password = document.getElementById('password').value;
+  settings.instagram = document.getElementById('instagram').value;
+  settings.youtube = document.getElementById('youtube').value;
+  settings.spotify = document.getElementById('spotify').value;
+
+  localStorage.setItem('userSettings', JSON.stringify(settings));
+  alert('Settings saved successfully!');
+});
+</script>
+
+</body>
+</html>

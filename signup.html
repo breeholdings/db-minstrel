@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&B Minstrel — Sign Up</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin:0; padding:0; font-family:'Montserrat',sans-serif; }
+body { background:#0A0F1E; color:#fff; min-height:100vh; display:flex; justify-content:center; align-items:center; }
+.container { width:100%; max-width:400px; padding:40px 30px; background:#10162E; border-radius:15px; box-shadow:0 5px 20px rgba(0,0,0,0.5); }
+
+.brand { text-align:center; margin-bottom:25px; }
+.brand img { width:80px; height:80px; border-radius:50%; border:2px solid #A6C8FF; }
+.brand h1 { margin-top:10px; color:#A6C8FF; font-size:1.8rem; }
+
+h2 { text-align:center; margin-bottom:20px; }
+form { display:flex; flex-direction:column; gap:15px; }
+input[type="text"], input[type="email"], input[type="password"] { padding:12px 15px; border-radius:10px; border:none; background:#0A0F1E; color:#fff; }
+input::placeholder { color:#aaa; }
+.terms { display:flex; align-items:center; gap:10px; font-size:0.9rem; color:#aaa; }
+.terms a { color:#2D6DAB; text-decoration:none; }
+button { padding:12px; border:none; border-radius:10px; background:#2D6DAB; color:#fff; font-weight:600; cursor:pointer; transition:0.3s; }
+button:disabled { background:#555; cursor:not-allowed; }
+button:hover:not(:disabled) { background:#4092D0; }
+
+#verificationSection { display:none; flex-direction:column; gap:15px; }
+#verificationCode { padding:12px; border-radius:10px; border:none; background:#0A0F1E; color:#fff; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="brand">
+    <img src="logo.jpeg" alt="D&B Minstrel Logo">
+    <h1>D&B Minstrel</h1>
+  </div>
+
+  <h2>Create Your Account</h2>
+  <form id="signupForm">
+    <input type="text" id="fullName" placeholder="Full Name" required>
+    <input type="text" id="artistName" placeholder="Artist Name" required>
+    <input type="email" id="email" placeholder="Email Address" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+    
+    <div class="terms">
+      <input type="checkbox" id="agreeTerms">
+      <label for="agreeTerms">I agree to the <a href="#">Terms and Conditions</a> and <a href="#">Privacy Policy</a></label>
+    </div>
+
+    <button type="submit" id="signupBtn" disabled>Sign Up</button>
+  </form>
+
+  <div id="verificationSection">
+    <h2>Email Verification</h2>
+    <p>Enter the code sent to your email:</p>
+    <input type="text" id="verificationCode" placeholder="Verification Code">
+    <button id="verifyBtn">Verify</button>
+  </div>
+</div>
+
+<script src="sendCode.js"></script>
+
+<script>
+document.getElementById("agreeTerms").addEventListener("change", function () {
+  document.getElementById("signupBtn").disabled = !this.checked;
+});
+
+document.getElementById("signupForm").addEventListener("submit", function (e) {
+  e.preventDefault(); // stop page reload
+
+  // Validate matching passwords
+  const pass = document.getElementById("password").value;
+  const confirmPass = document.getElementById("confirmPassword").value;
+
+  if (pass !== confirmPass) {
+    alert("Passwords do not match!");
+    return;
+  }
+
+  // Call your Brevo sending function
+  sendVerificationCode();
+
+  // Show verification section
+  document.getElementById("verificationSection").style.display = "flex";
+  document.getElementById("signupForm").style.display = "none";
+});
+</script>
+
+
+</body>
+</html>

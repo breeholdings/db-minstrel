@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D&B Minstrel — Independent Music Platform</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    /* ---------- GLOBAL ---------- */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+    body { background-color: #0A0F1E; color: #fff; line-height: 1.6; }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+    button { cursor: pointer; border: none; background: #2D6DAB; color: #fff; padding: 12px 28px; font-weight: 600; border-radius: 30px; transition: 0.3s; }
+    button:hover { background: #4092D0; transform: translateY(-2px); }
+
+    /* ---------- HEADER ---------- */
+    header { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; position: sticky; top:0; z-index:1000; background: rgba(10,15,30,0.95); backdrop-filter: blur(6px); }
+    .logo img { height: 50px; }
+    nav a { margin-left: 25px; font-weight: 600; transition: 0.3s; }
+    nav a:hover { color: #4092D0; }
+
+    /* ---------- HERO ---------- */
+    .hero { min-height: 75vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align:center; padding: 0 5%; 
+      background: linear-gradient(rgba(10,15,30,0.4), rgba(10,15,30,0.7)), url('https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?auto=format&fit=crop&w=1470&q=80') center/cover no-repeat; }
+    .hero h1 { font-size: 3rem; margin-bottom: 15px; color: #fff; }
+    .hero p { font-size: 1.3rem; margin-bottom: 30px; color: #ccc; max-width:700px; }
+
+    /* ---------- ABOUT ---------- */
+    #about { text-align:center; padding:80px 5%; }
+    #about h2 { font-size:2.8rem; color:#fff; margin-bottom:20px; }
+    #about p { font-size:1.15rem; max-width:800px; margin:auto; color:#ddd; }
+
+    /* ---------- RELEASES ---------- */
+    #releases { padding:80px 5%; }
+    #releases h2 { text-align:center; font-size:2.8rem; color:#fff; margin-bottom:40px; }
+    .release-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:40px; }
+    .release-card { background:#10162E; border-radius:15px; overflow:hidden; text-align:center; transition: transform 0.3s, box-shadow 0.3s; }
+    .release-card:hover { transform: translateY(-6px); box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+    .release-card img { height:250px; width:100%; object-fit:cover; }
+    .release-card .artist { color:#A6C8FF; font-weight:600; margin:10px 0 5px; }
+    .release-card h3 { font-size:1.3rem; margin-bottom:5px; }
+    .release-card p { font-size:0.95rem; color:#bbb; margin-bottom:10px; }
+    .release-card .stream-buttons { display:flex; justify-content:center; gap:10px; margin-bottom:15px; }
+    .release-card .stream-buttons a { background:#2D6DAB; padding:6px 12px; border-radius:20px; font-size:0.85rem; color:#fff; font-weight:600; transition:0.3s; }
+    .release-card .stream-buttons a:hover { background:#4092D0; }
+
+    /* ---------- NEWSLETTER ---------- */
+    #newsletter { background:#10162E; border-radius:15px; padding:60px 40px; text-align:center; margin:50px 5%; box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+    #newsletter h2 { font-size:2.5rem; margin-bottom:20px; color:#fff; }
+    #newsletter form { display:flex; justify-content:center; flex-wrap:wrap; gap:15px; }
+    #newsletter input[type="email"] { padding:12px 20px; border-radius:30px; border:none; width:300px; font-size:1rem; }
+
+
+    /* FOOTER STYLING */
+  footer {
+    text-align:center; 
+    padding:40px 5%; 
+    background:#10162E; 
+    color:#fff; 
+    border-top:1px solid #4092D0; 
+    display:flex; 
+    flex-direction:column; 
+    gap:15px;
+  }
+  .footer-links a {
+    color:#fff; 
+    font-weight:600; 
+    margin:0 8px; 
+    transition:0.3s;
+  }
+  .footer-links a:hover { color:#4092D0; }
+
+  .footer-socials {
+    display:flex;
+    justify-content:center;
+    gap:20px;
+}
+
+.footer-socials a {
+    color:#A6C8FF;
+    transition:0.3s;
+}
+
+.footer-socials a:hover {
+    color:#fff;
+    transform: scale(1.2);
+}
+
+    /* ---------- RESPONSIVE ---------- */
+    @media(max-width:768px){ .hero h1{font-size:2.2rem;} .hero p{font-size:1.1rem;} .release-card img{height:200px;} #newsletter input[type="email"]{width:100%;} nav a{margin-left:15px;font-size:0.9rem;} }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo"><img src="logo.jpeg" alt="D&B Minstrel Logo"></div>
+    <nav>
+      <a href="#about">About</a>
+      <a href="#releases">Releases</a>
+      <a href="#newsletter">Newsletter</a>
+      <a href="#contact">Contact</a>
+      <a href="artist-login.html" target="_blank">Artist Login / SignUp</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Empowering Independent Music Worldwide</h1>
+    <p>Discover, stream, and distribute music globally. D&B Minstrel is the platform for independent artists of all genres.</p>
+    <button onclick="document.getElementById('releases').scrollIntoView({behavior:'smooth'})">Explore Music</button>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <h2>About D&B Minstrel</h2>
+    <p>D&B Minstrel helps independent artists distribute their music worldwide, manage rights, and reach their fans. Our platform is open to all artists, providing professional tools to share and promote music globally.</p>
+  </section>
+
+  <!-- RELEASES -->
+  <section id="releases">
+    <h2>Latest Releases</h2>
+    <div class="release-grid">
+      <div class="release-card">
+        <img src="https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?auto=format&fit=crop&w=500&q=80" alt="Song 1 Cover">
+        <div class="artist">Artist Name 1</div>
+        <h3>Song Title 1</h3>
+        <p>Release Date: 2025-12-05</p>
+        <div class="stream-buttons">
+          <a href="#">Spotify</a>
+          <a href="#">Apple Music</a>
+          <a href="#">D&B Minstrel</a>
+        </div>
+      </div>
+      <div class="release-card">
+        <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=500&q=80" alt="Song 2 Cover">
+        <div class="artist">Artist Name 2</div>
+        <h3>Song Title 2</h3>
+        <p>Release Date: 2025-12-12</p>
+        <div class="stream-buttons">
+          <a href="#">Spotify</a>
+          <a href="#">Apple Music</a>
+          <a href="#">D&B Minstrel</a>
+        </div>
+      </div>
+      <div class="release-card">
+        <img src="https://images.unsplash.com/photo-1518976024611-5c4f6df37f1e?auto=format&fit=crop&w=500&q=80" alt="Song 3 Cover">
+        <div class="artist">Artist Name 3</div>
+        <h3>Song Title 3</h3>
+        <p>Release Date: 2025-12-19</p>
+        <div class="stream-buttons">
+          <a href="#">Spotify</a>
+          <a href="#">Apple Music</a>
+          <a href="#">D&B Minstrel</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section id="newsletter">
+    <h2>Stay Updated</h2>
+    <form>
+      <input type="email" placeholder="Enter your email" required>
+      <button type="submit">Subscribe</button>
+    </form>
+  </section>
+
+  <footer>
+  <div>D&B Minstrel — Official Music Distribution Platform for Independent Artists.</div>
+  <div class="footer-links">
+    <a href="#about">About</a> | 
+    <a href="#releases">Releases</a> | 
+    <a href="#newsletter">Newsletter</a>
+  </div>
+  <div class="footer-socials">
+    <a href="https://www.facebook.com/share/1A6gNxgX9R/?mibextid=wwXIfr" target="_blank"><i class="fab fa-facebook-f"></i></a>
+    <a href="https://www.instagram.com/dave_jethro" target="_blank"><i class="fab fa-instagram"></i></a>
+    <a href="https://x.com/dave_jethro1" target="_blank"><i class="fab fa-twitter"></i></a><a href="https://www.tiktok.com/@dave_jethro" target="_blank"><i class="fab fa-tiktok"></i></a>
+    <a href="https://wa.me/256764188054" target="_blank"><i class="fab fa-whatsapp"></i></a>
+  </div>
+  <div>© 2025 D&B Minstrel | All rights reserved</div>
+</footer>
+
+
+</body>
+</html>

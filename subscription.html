@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&B Minstrel — Payment</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Montserrat',sans-serif;}
+body{background:#0A0F1E;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;}
+.container{width:100%;max-width:450px;background:#10162E;padding:30px;border-radius:15px;box-shadow:0 0 20px rgba(0,0,0,0.45);}
+
+h2{text-align:center;margin-bottom:10px;color:#A6C8FF;}
+p{text-align:center;color:#ccc;}
+
+.summary{
+    background:#0A0F1E;
+    padding:15px;
+    border-radius:10px;
+    margin:15px 0;
+    text-align:center;
+}
+
+.payment-options{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:15px;
+}
+
+.payment-option{
+    flex:1;
+    background:#0A0F1E;
+    margin:0 5px;
+    padding:12px;
+    text-align:center;
+    border-radius:10px;
+    cursor:pointer;
+    border:2px solid transparent;
+    transition:0.3s;
+}
+.payment-option.active{
+    border-color:#2D6DAB;
+    background:#16203A;
+}
+
+.payment-option img{
+    width:45px;height:30px;object-fit:contain;
+}
+
+.section{
+    display:none;
+    flex-direction:column;
+    gap:15px;
+}
+
+.section input, .section select{
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    background:#0A0F1E;
+    color:#fff;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:#2D6DAB;
+    margin-top:20px;
+    color:#fff;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+button:hover{background:#4092D0;}
+
+.convert-box{
+    background:#0A0F1E;
+    padding:10px;
+    border-radius:10px;
+    margin-top:-5px;
+    display:none;
+    text-align:center;
+    color:#A6C8FF;
+    font-size:0.9rem;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <h2>Activate Your Artist Account</h2>
+  <p>Yearly Subscription — Unlimited Uploads</p>
+
+  <div class="summary">
+    <h3>Fee: $29.99 / year</h3>
+    <p>Includes unlimited songs + release scheduling</p>
+  </div>
+
+  <!-- PAYMENT METHODS -->
+  <div class="payment-options">
+    <div class="payment-option active" data-type="card">
+      <img src="https://i.imgur.com/1XK7eQZ.png">
+      <p style="font-size:0.8rem;margin-top:5px;">Card</p>
+    </div>
+    <div class="payment-option" data-type="mobile">
+      <img src="https://i.imgur.com/zxqvO7R.png">
+      <p style="font-size:0.8rem;margin-top:5px;">Mobile Money</p>
+    </div>
+  </div>
+
+  <!-- CARD PAYMENT -->
+  <div id="cardSection" class="section" style="display:flex;">
+      <input type="text" id="cardName" placeholder="Name on Card">
+      <input type="text" id="cardNumber" placeholder="Card Number" maxlength="16">
+      <div style="display:flex;gap:10px;">
+        <input type="text" id="expiry" placeholder="MM/YY" maxlength="5">
+        <input type="text" id="cvv" placeholder="CVV" maxlength="4">
+      </div>
+  </div>
+
+  <!-- MOBILE MONEY PAYMENT -->
+  <div id="mobileSection" class="section">
+      <select id="network">
+        <option value="">Select Network</option>
+        <option value="UG-MTN">MTN Uganda</option>
+        <option value="UG-Airtel">Airtel Uganda</option>
+        <option value="KE-MPESA">M-Pesa Kenya</option>
+        <option value="TZ-Airtel">Airtel Tanzania</option>
+        <option value="GH-MTN">MTN Ghana</option>
+        <option value="NG-MTN">MTN Nigeria</option>
+      </select>
+
+      <input type="text" id="mobileNumber" placeholder="Mobile Money Number">
+
+      <div class="convert-box" id="convertedAmount">Converted: —</div>
+  </div>
+
+  <button id="payBtn">Pay Now</button>
+
+</div>
+
+<script>
+const paymentOptions = document.querySelectorAll(".payment-option");
+const cardSection = document.getElementById("cardSection");
+const mobileSection = document.getElementById("mobileSection");
+const convertedAmount = document.getElementById("convertedAmount");
+
+const YEARLY_FEE = 29.99;
+
+// Payment Option Switching
+paymentOptions.forEach(option => {
+  option.addEventListener("click", () => {
+    paymentOptions.forEach(o => o.classList.remove("active"));
+    option.classList.add("active");
+
+    let type = option.dataset.type;
+    cardSection.style.display = type === "card" ? "flex" : "none";
+    mobileSection.style.display = type === "mobile" ? "flex" : "none";
+  });
+});
+
+// Currency Conversion Rates (rough but accurate)
+const rates = {
+  "UGX": 3800,
+  "KES": 150,
+  "TZS": 2600,
+  "GHS": 14,
+  "NGN": 1600
+};
+
+document.getElementById("network").addEventListener("change", function(){
+  let value = this.value;
+  let currency = "";
+  let rate = 0;
+
+  if (value.includes("UG")) { currency="UGX"; rate=rates.UGX; }
+  if (value.includes("KE")) { currency="KES"; rate=rates.KES; }
+  if (value.includes("TZ")) { currency="TZS"; rate=rates.TZS; }
+  if (value.includes("GH")) { currency="GHS"; rate=rates.GHS; }
+  if (value.includes("NG")) { currency="NGN"; rate=rates.NGN; }
+
+  if (!currency) {
+    convertedAmount.style.display="none";
+    return;
+  }
+
+  const converted = Math.round(YEARLY_FEE * rate).toLocaleString();
+
+  convertedAmount.style.display="block";
+  convertedAmount.innerText = `Converted Amount: ${converted} ${currency}`;
+});
+
+document.getElementById("payBtn").addEventListener("click", () => {
+  alert("Payment processing...");
+  window.location.href = "dashboard.html";
+});
+</script>
+
+</body>
+</html>
