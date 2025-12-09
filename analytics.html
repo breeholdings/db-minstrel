@@ -241,6 +241,17 @@ footer { text-align:center; padding:20px 5%; background:#10162E; color:#fff; bor
 
 
 <script>
+// ------------------ Clear old/demo data once ------------------
+// Run this only once when you deploy a fresh dashboard
+if(!localStorage.getItem('initialized')) {
+    localStorage.removeItem('releaseData');
+    localStorage.removeItem('dashboardStats');
+    localStorage.removeItem('activityData');
+    localStorage.removeItem('countryData');
+    localStorage.setItem('initialized', 'true'); // flag to prevent clearing again
+    console.log('Old demo data cleared from localStorage.');
+}
+
 const DEFAULT_PLATFORMS = ['Spotify','Apple Music','Boomplay','Audiomack','YouTube'];
 const theme = {
   bg: getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#0A0F1E',
@@ -251,6 +262,7 @@ const theme = {
   text: '#fff'
 };
 
+// -------------------- Load Releases --------------------
 function loadReleases(){
   try {
     const raw = localStorage.getItem('releaseData');
@@ -264,33 +276,17 @@ function loadReleases(){
       downloads: Number(r.downloads||0),
       listeners: Number(r.listeners||0),
       earnings: Number(r.earnings||0),
+      artist: r.artist || 'Unknown',          // capture main + featured
       platforms: r.platforms || null
     }));
   } catch(e){ console.error(e); return []; }
 }
 
+// -------------------- Country Data --------------------
 function saveCountryData(data){ localStorage.setItem('countryData', JSON.stringify(data)); }
 function loadCountryData(){ try{ return JSON.parse(localStorage.getItem('countryData')||'{}'); }catch(e){return {};} }
 
-function seedIfEmpty(){
-  const releases = loadReleases();
-  if(releases.length) return releases;
-  const now = new Date();
-  const sample = [
-    {title:'Lights Off', releaseDate:formatDateOffset(now,-200), streams:8200, downloads:120, listeners:4100, earnings:8200*0.01+120*0.5, imgSrc:'https://via.placeholder.com/300x300/2D6DAB/ffffff?text=Lights'},
-    {title:'Higher', releaseDate:formatDateOffset(now,-120), streams:4100, downloads:80, listeners:2100, earnings:4100*0.01+80*0.5, imgSrc:'https://via.placeholder.com/300x300/2D6DAB/ffffff?text=Higher'},
-    {title:'Real Love', releaseDate:formatDateOffset(now,-40), streams:2100, downloads:50, listeners:1200, earnings:2100*0.01+50*0.5, imgSrc:'https://via.placeholder.com/300x300/2D6DAB/ffffff?text=Love'}
-  ];
-  localStorage.setItem('releaseData', JSON.stringify(sample));
-  return sample;
-}
-
-function formatDateOffset(base,daysOffset){
-  const d = new Date(base);
-  d.setDate(d.getDate()+daysOffset);
-  return d.toISOString().slice(0,10);
-}
-
+// -------------------- Aggregates --------------------
 function buildAggregates(releases, timeframeDays){
   const now = new Date();
   let months = 12;
@@ -340,12 +336,9 @@ function buildAggregates(releases, timeframeDays){
     }
 
     // distribute remainder to last month
-    const remStreams = totalStreams - baseStream*monthsToDistribute;
-    const remDownloads = totalDownloads - baseDownload*monthsToDistribute;
-    const remEarnings = totalEarnings - baseEarning*monthsToDistribute;
-    streamsSeries[labels.length-1] += remStreams;
-    downloadsSeries[labels.length-1] += remDownloads;
-    earningsSeries[labels.length-1] += remEarnings;
+    streamsSeries[labels.length-1] += totalStreams - baseStream*monthsToDistribute;
+    downloadsSeries[labels.length-1] += totalDownloads - baseDownload*monthsToDistribute;
+    earningsSeries[labels.length-1] += totalEarnings - baseEarning*monthsToDistribute;
   });
 
   const totals = {
@@ -358,7 +351,7 @@ function buildAggregates(releases, timeframeDays){
   return {labels, streamsSeries, downloadsSeries, earningsSeries, totals};
 }
 
-// Platform breakdown & country distribution remain unchanged
+// -------------------- Platform Breakdown --------------------
 function buildPlatformBreakdown(releases){
   const platformTotals = {};
   DEFAULT_PLATFORMS.forEach(p=>platformTotals[p]=0);
@@ -378,12 +371,14 @@ function buildPlatformBreakdown(releases){
   });
   return Object.keys(platformTotals).map(k=>({platform:k,value:platformTotals[k]})).sort((a,b)=>b.value-a.value);
 }
+
 function hashCode(str){ let h=0; for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i); h|=0;} return h; }
 
+// -------------------- Country Distribution --------------------
 function buildCountryDistribution(releases){
   let countryData = loadCountryData();
   if(countryData && Object.keys(countryData).length>0) return countryData;
-  const pool = ['US','GB','NG','KE','UG','ZA','DE','FR','BR','ZA','TZ','CM'];
+  const pool = ['US','GB','NG','KE','UG','ZA','DE','FR','BR','TZ','CM'];
   const cd = {};
   releases.forEach((r, idx)=>{
     const base = r.streams||0;
@@ -400,31 +395,8 @@ function buildCountryDistribution(releases){
   return cd;
 }
 
-// UI functions remain mostly unchanged
-function populateTrackFilter(releases){
-  const sel = document.getElementById('trackFilter');
-  sel.innerHTML = '<option value="all">All tracks</option>';
-  releases.forEach((r, idx)=>{const opt=document.createElement('option'); opt.value=idx; opt.textContent=r.title; sel.appendChild(opt);});
-}
-
-function buildTopTracksTable(releases){
-  const tbody = document.querySelector('#topTracksTable tbody');
-  tbody.innerHTML = '';
-  const sorted = releases.slice().sort((a,b)=>(b.streams||0)-(a.streams||0));
-  sorted.forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td style="display:flex;gap:10px;align-items:center">
-        <img src="${r.imgSrc||'https://via.placeholder.com/60x60/2D6DAB/ffffff?text=DB'}" style="width:44px;height:44px;border-radius:6px;object-fit:cover"/>
-        <div><div style="font-weight:700">${r.title}</div><div class="small-muted">${r.platforms?Object.keys(r.platforms).join(', '):''}</div></div>
-      </td>
-      <td>${r.streams}</td><td>${r.downloads}</td><td>$${r.earnings.toFixed(2)}</td><td>${r.releaseDate||'-'}</td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-let uploadsChart;
-
-function buildUploadData(releases, timeframeDays) {
+// -------------------- Uploads Chart --------------------
+function buildUploadData(releases, timeframeDays){
   const now = new Date();
   let months = 12;
   if(timeframeDays==='30') months=1;
@@ -457,9 +429,35 @@ function buildUploadData(releases, timeframeDays) {
   return {labels, uploadsSeries};
 }
 
+// -------------------- UI --------------------
+function populateTrackFilter(releases){
+  const sel = document.getElementById('trackFilter');
+  sel.innerHTML = '<option value="all">All tracks</option>';
+  releases.forEach((r, idx)=>{
+    const opt=document.createElement('option');
+    opt.value=idx;
+    opt.textContent=r.title;
+    sel.appendChild(opt);
+  });
+}
 
-// Chart rendering
-let streamsChart, revenueChart, platformChart;
+function buildTopTracksTable(releases){
+  const tbody = document.querySelector('#topTracksTable tbody');
+  tbody.innerHTML = '';
+  const sorted = releases.slice().sort((a,b)=>(b.streams||0)-(a.streams||0));
+  sorted.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="display:flex;gap:10px;align-items:center">
+        <img src="${r.imgSrc||'https://via.placeholder.com/60x60/2D6DAB/ffffff?text=DB'}" style="width:44px;height:44px;border-radius:6px;object-fit:cover"/>
+        <div><div style="font-weight:700">${r.title}</div><div class="small-muted">${r.artist}</div></div>
+      </td>
+      <td>${r.streams}</td><td>${r.downloads}</td><td>$${r.earnings.toFixed(2)}</td><td>${r.releaseDate||'-'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// -------------------- Charts Rendering --------------------
+let streamsChart, revenueChart, platformChart, uploadsChart;
 const chartOptions = {responsive:true, maintainAspectRatio:false};
 
 function renderCharts(releases, timeframe){
@@ -472,7 +470,9 @@ function renderCharts(releases, timeframe){
   if(streamsChart) streamsChart.destroy();
   if(revenueChart) revenueChart.destroy();
   if(platformChart) platformChart.destroy();
+  if(uploadsChart) uploadsChart.destroy();
 
+  // Streams Line Chart
   const ctx1 = document.getElementById('streamsChart').getContext('2d');
   streamsChart = new Chart(ctx1,{
     type:'line',
@@ -480,6 +480,7 @@ function renderCharts(releases, timeframe){
     options:{...chartOptions,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:theme.muted}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:theme.muted}}}}
   });
 
+  // Revenue Bar Chart
   const ctx2 = document.getElementById('revenueChart').getContext('2d');
   revenueChart = new Chart(ctx2,{
     type:'bar',
@@ -487,6 +488,7 @@ function renderCharts(releases, timeframe){
     options:{...chartOptions,plugins:{legend:{display:false}},scales:{x:{ticks:{color:theme.muted},grid:{display:false}},y:{ticks:{color:theme.muted},grid:{color:'rgba(255,255,255,0.03)'}}}}
   });
 
+  // Platform Doughnut
   const plat = buildPlatformBreakdown(releases);
   const ctx3 = document.getElementById('platformChart').getContext('2d');
   platformChart = new Chart(ctx3,{
@@ -498,32 +500,17 @@ function renderCharts(releases, timeframe){
   buildTopTracksTable(releases);
   renderGeoChart(releases);
 
+  // Uploads Chart
   const uploadData = buildUploadData(releases, String(timeframe));
-const ctx4 = document.getElementById('uploadsChart').getContext('2d');
-if(uploadsChart) uploadsChart.destroy();
-uploadsChart = new Chart(ctx4, {
-  type:'bar',
-  data:{
-    labels: uploadData.labels,
-    datasets:[{
-      label:'Uploads',
-      data: uploadData.uploadsSeries,
-      backgroundColor: theme.accent
-    }]
-  },
-  options:{
-    ...chartOptions,
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{ticks:{color:theme.muted}, grid:{display:false}},
-      y:{ticks:{color:theme.muted}, grid:{color:'rgba(255,255,255,0.03)'}}
-    }
-  }
-});
-
+  const ctx4 = document.getElementById('uploadsChart').getContext('2d');
+  uploadsChart = new Chart(ctx4, {
+    type:'bar',
+    data:{labels: uploadData.labels, datasets:[{label:'Uploads', data:uploadData.uploadsSeries, backgroundColor: theme.accent}]},
+    options:{...chartOptions,plugins:{legend:{display:false}}, scales:{x:{ticks:{color:theme.muted}, grid:{display:false}},y:{ticks:{color:theme.muted}, grid:{color:'rgba(255,255,255,0.03)'}}}}
+  });
 }
 
-// GeoChart code unchanged
+// -------------------- GeoChart --------------------
 google.charts.load('current', {'packages':['geochart']});
 function renderGeoChart(releases){
   const countryData = buildCountryDistribution(releases);
@@ -546,20 +533,22 @@ function renderCountryTable(countryData){
   table.style.width='100%';
   table.innerHTML=`<thead><tr><th style="text-align:left;color:${theme.muted}">Country</th><th style="text-align:right;color:${theme.muted}">Streams</th></tr></thead>`;
   const tbody = document.createElement('tbody');
-  arr.forEach(row=>{const tr=document.createElement('tr'); tr.innerHTML=`<td style="padding:6px 8px">${row.country}</td><td style="padding:6px 8px;text-align:right">${row.streams}</td>`;tbody.appendChild(tr);});
+  arr.forEach(row=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="padding:6px 8px">${row.country}</td><td style="padding:6px 8px;text-align:right">${row.streams}</td>`;
+    tbody.appendChild(tr);
+  });
   table.appendChild(tbody);
   wrapper.appendChild(table);
 }
 
-// UI wiring
+// -------------------- Init --------------------
 document.getElementById('refreshBtn').addEventListener('click',()=>initAnalytics());
 document.getElementById('timeframe').addEventListener('change',()=>initAnalytics());
 document.getElementById('trackFilter').addEventListener('change',()=>initAnalytics());
 
 function initAnalytics(){
   let releases = loadReleases();
-  if(releases.length===0) seedIfEmpty();
-  releases = loadReleases();
   populateTrackFilter(releases);
 
   const filterVal = document.getElementById('trackFilter').value;
@@ -574,8 +563,13 @@ function initAnalytics(){
 }
 
 initAnalytics();
-window.addEventListener('resize',()=>{if(streamsChart) streamsChart.resize(); if(revenueChart) revenueChart.resize(); if(platformChart) platformChart.resize();});
+window.addEventListener('resize',()=>{
+  if(streamsChart) streamsChart.resize();
+  if(revenueChart) revenueChart.resize();
+  if(platformChart) platformChart.resize();
+  if(uploadsChart) uploadsChart.resize();
+});
 </script>
-
 </body>
 </html>
+
