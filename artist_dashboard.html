@@ -240,6 +240,13 @@ footer { text-align:center; padding:20px 5%; background:#10162E; color:#fff; bor
 </div>
 
 <script>
+// ---------------- Clear old test/demo data (run once) ----------------
+// Uncomment the following lines only the first time you deploy
+// localStorage.removeItem('dashboardStats');
+// localStorage.removeItem('releaseData');
+// localStorage.removeItem('activityData');
+
+// ---------------- Modal Handling ----------------
 const modal = document.getElementById('uploadModal');
 const openBtn = document.getElementById('openModalBtn');
 const sidebarUploadBtn = document.getElementById('sidebarUploadBtn');
@@ -253,32 +260,38 @@ sidebarUploadBtn.onclick = () => modal.style.display='flex';
 closeBtn.onclick = () => modal.style.display='none';
 window.onclick = e => { if(e.target===modal) modal.style.display='none'; }
 
-// Global stats
-let stats = { streams:0, downloads:0, listeners:0, earnings:0 };
-if(localStorage.getItem('dashboardStats')){
-  stats = JSON.parse(localStorage.getItem('dashboardStats'));
-  updateStats();
+// ---------------- Initialize Stats ----------------
+let stats = JSON.parse(localStorage.getItem('dashboardStats') || 
+    JSON.stringify({ streams:0, downloads:0, listeners:0, earnings:0 })
+);
+
+// Render stats without immediately overwriting localStorage
+function renderStats() {
+  document.getElementById('totalStreams').innerText = stats.streams;
+  document.getElementById('totalDownloads').innerText = stats.downloads;
+  document.getElementById('totalListeners').innerText = stats.listeners;
+  document.getElementById('earnings').innerText = `$${stats.earnings.toFixed(2)}`;
 }
 
-// Releases and Activity
+// Save stats when they change
+function updateStats() {
+  renderStats();
+  localStorage.setItem('dashboardStats', JSON.stringify(stats));
+}
+
+// ---------------- Initialize Releases & Activity ----------------
 let releasesData = JSON.parse(localStorage.getItem('releaseData') || '[]');
 let activityData = JSON.parse(localStorage.getItem('activityData') || '[]');
 const MAX_ACTIVITY_DISPLAY = 5;
 
-// Ensure legacy string activities have timestamps
+// Sort activity by timestamp descending
 activityData = activityData.map(a => {
   if(a && typeof a === 'object' && a.timestamp) return a;
   return { message: a.message || a, timestamp: a.timestamp || Date.now() };
 });
-
-// Sort by timestamp descending
 activityData.sort((a,b) => b.timestamp - a.timestamp);
 
-// Initial render
-renderActivityFeed();
-renderDashboardReleases();
-
-// ---------------- Activity ----------------
+// ---------------- Render Functions ----------------
 function renderActivityFeed() {
   activityFeed.innerHTML = '';
   activityData.slice(0, MAX_ACTIVITY_DISPLAY).forEach(entry => {
@@ -289,21 +302,25 @@ function renderActivityFeed() {
   });
 }
 
-// Save a new activity with exact timestamp
+function renderDashboardReleases() {
+  releaseGrid.innerHTML = '';
+  const sortedReleases = [...releasesData].sort((a,b)=> new Date(b.releaseDate) - new Date(a.releaseDate));
+  const recentReleases = sortedReleases.slice(0,3);
+  recentReleases.forEach(addReleaseCard);
+
+  const viewAllLink = document.createElement('div');
+  viewAllLink.style.textAlign = 'center';
+  viewAllLink.style.marginTop = '15px';
+  viewAllLink.innerHTML = `<a href="releases.html" style="color:#2D6DAB; font-weight:600;">View All Songs &raquo;</a>`;
+  releaseGrid.appendChild(viewAllLink);
+}
+
+// ---------------- Activity ----------------
 function saveActivity(message){
   const timestamp = Date.now();
   activityData.unshift({message, timestamp});
   localStorage.setItem('activityData', JSON.stringify(activityData));
   renderActivityFeed();
-}
-
-// ---------------- Stats ----------------
-function updateStats() {
-  document.getElementById('totalStreams').innerText = stats.streams;
-  document.getElementById('totalDownloads').innerText = stats.downloads;
-  document.getElementById('totalListeners').innerText = stats.listeners;
-  document.getElementById('earnings').innerText = `$${stats.earnings.toFixed(2)}`;
-  localStorage.setItem('dashboardStats', JSON.stringify(stats));
 }
 
 // ---------------- Releases ----------------
@@ -312,7 +329,6 @@ function saveRelease(release){
   localStorage.setItem('releaseData', JSON.stringify(releasesData));
 }
 
-// Update existing release after play/download
 function saveUpdatedRelease(release, trackStats){
   const idx = releasesData.findIndex(r => r.title===release.title && r.releaseDate===release.releaseDate);
   if(idx!==-1){
@@ -321,22 +337,7 @@ function saveUpdatedRelease(release, trackStats){
   }
 }
 
-// ---------------- Render Dashboard ----------------
-function renderDashboardReleases() {
-  releaseGrid.innerHTML = '';
-  const sortedReleases = [...releasesData].sort((a,b)=> new Date(b.releaseDate) - new Date(a.releaseDate));
-  const recentReleases = sortedReleases.slice(0,3);
-  recentReleases.forEach(addReleaseCard);
-
-  // "View All Releases" link
-  const viewAllLink = document.createElement('div');
-  viewAllLink.style.textAlign = 'center';
-  viewAllLink.style.marginTop = '15px';
-  viewAllLink.innerHTML = `<a href="releases.html" style="color:#2D6DAB; font-weight:600;">View All Songs &raquo;</a>`;
-  releaseGrid.appendChild(viewAllLink);
-}
-
-// ---------------- Add release card ----------------
+// ---------------- Add Release Card ----------------
 function addReleaseCard(release){
   const {title, releaseDate, imgSrc, streams=0, downloads=0, listeners=0, earnings=0, artist="Unknown"} = release;
 
@@ -454,8 +455,8 @@ uploadForm.addEventListener('submit', function(e){
     };
 
     saveRelease(release);
-    saveActivity(`Track Upload: "${title}" uploaded`); // now stores exact timestamp
-    addReleaseCard(release); // render immediately
+    saveActivity(`Track Upload: "${title}" uploaded`);
+    addReleaseCard(release);
     updateStats();
 
     modal.style.display='none';
@@ -463,8 +464,11 @@ uploadForm.addEventListener('submit', function(e){
   }
   reader.readAsDataURL(coverFile);
 });
+
+// ---------------- Initial Render ----------------
+renderStats();
+renderActivityFeed();
+renderDashboardReleases();
 </script>
-
-
 </body>
 </html>
